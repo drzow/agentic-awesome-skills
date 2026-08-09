@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-02T16:27:13.000Z",
-  "total": 2001,
+  "generatedAt": "2026-08-09T06:51:55.000Z",
+  "total": 2007,
   "skills": [
     {
       "id": "00-andruia-consultant",
@@ -14395,7 +14395,7 @@
       "name": "context-agent",
       "description": "Agente de contexto para continuidade entre sessoes. Salva resumos, decisoes, tarefas pendentes e carrega briefing automatico na sessao seguinte.",
       "category": "ai-ml",
-      "risk": "safe",
+      "risk": "critical",
       "source": "community",
       "tags": [
         "context",
@@ -14564,7 +14564,7 @@
       "name": "context-guardian",
       "description": "Guardiao de contexto que preserva dados criticos antes da compactacao automatica. Snapshots, verificacao de integridade e zero perda de informacao.",
       "category": "ai-ml",
-      "risk": "safe",
+      "risk": "critical",
       "source": "community",
       "tags": [
         "context",
@@ -25334,6 +25334,41 @@
         "token"
       ],
       "path": "skills/geminiignore-finops/SKILL.md"
+    },
+    {
+      "id": "generate-nanobanana",
+      "canonical_id": "generate-nanobanana",
+      "name": "generate-nanobanana",
+      "description": "Generate and edit images/video with Google's Gemini media models (Nano Banana 2/Pro, Gemini Omni Flash), with cost-approval gates, reference-image support, and a prompt/output log per call.",
+      "category": "media",
+      "risk": "critical",
+      "source": "community",
+      "source_type": "community",
+      "source_repo": "AntonioCardenas/generate-nanobanana",
+      "license": "MIT",
+      "license_source": "https://github.com/AntonioCardenas/generate-nanobanana/blob/main/LICENSE",
+      "tags": [
+        "nanobanana",
+        "gemini",
+        "google-ai-studio",
+        "image-generation",
+        "video-generation"
+      ],
+      "triggers": [
+        "nanobanana",
+        "gemini",
+        "google-ai-studio",
+        "image-generation",
+        "video-generation",
+        "generate",
+        "edit",
+        "images",
+        "video",
+        "google",
+        "media",
+        "models"
+      ],
+      "path": "skills/generate-nanobanana/SKILL.md"
     },
     {
       "id": "geo-fundamentals",
@@ -39262,6 +39297,41 @@
       "path": "skills/outlook-calendar-automation/SKILL.md"
     },
     {
+      "id": "outreachagent",
+      "canonical_id": "outreachagent",
+      "name": "outreachagent",
+      "description": "Operate reply-aware cold outbound email workflows for AI agents with inboxes, contacts, templates, pacing, approvals, webhooks, and delivery metrics.",
+      "category": "marketing",
+      "risk": "critical",
+      "source": "self",
+      "source_type": "self",
+      "tags": [
+        "email",
+        "cold-outreach",
+        "sales",
+        "ai-agents",
+        "workflows",
+        "deliverability",
+        "webhooks",
+        "rest-api"
+      ],
+      "triggers": [
+        "email",
+        "cold-outreach",
+        "sales",
+        "ai-agents",
+        "workflows",
+        "deliverability",
+        "webhooks",
+        "rest-api",
+        "outreachagent",
+        "operate",
+        "reply",
+        "aware"
+      ],
+      "path": "skills/outreachagent/SKILL.md"
+    },
+    {
       "id": "page-cro",
       "canonical_id": "page-cro",
       "name": "page-cro",
@@ -39690,6 +39760,41 @@
         "password"
       ],
       "path": "skills/pentest-commands/SKILL.md"
+    },
+    {
+      "id": "people-data",
+      "canonical_id": "people-data",
+      "name": "people-data",
+      "description": "Research LinkedIn professional profiles and public business-contact data, including email/phone lookup, people search, and YouTube channel business-email discovery.",
+      "category": "research",
+      "risk": "safe",
+      "source": "https://github.com/agentbody/skills/blob/main/skills/people-data/SKILL.md",
+      "source_type": "community",
+      "source_repo": "agentbody/skills",
+      "license": "MIT",
+      "license_source": "https://github.com/agentbody/skills/blob/main/LICENSE",
+      "tags": [
+        "linkedin",
+        "youtube",
+        "people-search",
+        "business-contacts",
+        "research"
+      ],
+      "triggers": [
+        "linkedin",
+        "youtube",
+        "people-search",
+        "business-contacts",
+        "research",
+        "people",
+        "data",
+        "professional",
+        "profiles",
+        "public",
+        "business",
+        "contact"
+      ],
+      "path": "skills/people-data/SKILL.md"
     },
     {
       "id": "performance-engineer",
@@ -47698,6 +47803,42 @@
       "path": "skills/shopify-development/SKILL.md"
     },
     {
+      "id": "shopify-review-triage",
+      "canonical_id": "shopify-review-triage",
+      "name": "shopify-review-triage",
+      "description": "Turn public 1-3-star Shopify App Store review rows into a P0-P3 triage brief: incident risk, repeated friction, pricing confusion, feature requests, and an explicit needs-human-read bucket.",
+      "category": "product",
+      "risk": "none",
+      "source": "community",
+      "source_type": "community",
+      "source_repo": "alfredtech2026/shopify-app-review-brief",
+      "license": "MIT",
+      "license_source": "https://github.com/alfredtech2026/shopify-app-review-brief/blob/main/LICENSE",
+      "tags": [
+        "shopify",
+        "app-store-reviews",
+        "customer-feedback",
+        "triage",
+        "product-management",
+        "support"
+      ],
+      "triggers": [
+        "shopify",
+        "app-store-reviews",
+        "customer-feedback",
+        "triage",
+        "product-management",
+        "support",
+        "review",
+        "turn",
+        "public",
+        "star",
+        "app",
+        "store"
+      ],
+      "path": "skills/shopify-review-triage/SKILL.md"
+    },
+    {
       "id": "short",
       "canonical_id": "short",
       "name": "short",
@@ -52889,6 +53030,35 @@
       "path": "skills/travel-health-analyzer/SKILL.md"
     },
     {
+      "id": "travel-planner",
+      "canonical_id": "travel-planner",
+      "name": "travel-planner",
+      "description": "旅行/行程规划需求时使用:规划去某地旅行、X天X城、带老人孩子、自驾、假期安排等。产出逐日行程表、预算估算(经济/舒适/奢华三档)、交通住宿建议、景点美食清单。必须先问预算,预算未确认只输出问题清单;事实数据带来源和查询日期。",
+      "category": "travel",
+      "risk": "safe",
+      "source": "community",
+      "source_type": "community",
+      "source_repo": "saudademjj/luopan",
+      "license": "MIT",
+      "license_source": "https://github.com/saudademjj/luopan/blob/main/LICENSE",
+      "tags": [
+        "travel",
+        "itinerary",
+        "planning",
+        "trip",
+        "chinese"
+      ],
+      "triggers": [
+        "travel",
+        "itinerary",
+        "planning",
+        "trip",
+        "chinese",
+        "planner"
+      ],
+      "path": "skills/travel-planner/SKILL.md"
+    },
+    {
       "id": "tree-ring-memory",
       "canonical_id": "tree-ring-memory",
       "name": "tree-ring-memory",
@@ -53850,7 +54020,7 @@
       "id": "unified-ai-gateway",
       "canonical_id": "unified-ai-gateway",
       "name": "unified-ai-gateway",
-      "description": "Operate and evaluate Unified AI System through eight governed MCP tools while preserving fake-provider, authorization, and evidence boundaries.",
+      "description": "Operate and evaluate Unified AI System through nine governed MCP tools, including provider-free prompt enhancement, while preserving fake-provider, authorization, and evidence boundaries.",
       "category": "ai-ml",
       "risk": "critical",
       "source": "https://github.com/happy520ai/unified-ai-system/tree/master/skills/unified-ai-gateway",
@@ -53877,7 +54047,7 @@
         "operate",
         "evaluate",
         "through",
-        "eight"
+        "nine"
       ],
       "path": "skills/unified-ai-gateway/SKILL.md"
     },
@@ -55333,6 +55503,41 @@
         "mp4"
       ],
       "path": "skills/video-content-extractor/SKILL.md"
+    },
+    {
+      "id": "video-router",
+      "canonical_id": "video-router",
+      "name": "video-router",
+      "description": "Route a video-production brief to generation, deterministic composition, supplied-footage editing, or an automatic cross-modal plan before production begins.",
+      "category": "media",
+      "risk": "none",
+      "source": "https://github.com/Orkas-AI/Orkas-VideoStudio/tree/dd4a0f40b2bc6c6b0fe6f2e732c9540ffffefe08/packages/skills/video-router",
+      "source_type": "official",
+      "source_repo": "Orkas-AI/Orkas-VideoStudio",
+      "license": "MIT",
+      "license_source": "https://github.com/Orkas-AI/Orkas-VideoStudio/blob/dd4a0f40b2bc6c6b0fe6f2e732c9540ffffefe08/LICENSE",
+      "tags": [
+        "video",
+        "routing",
+        "editing",
+        "composition",
+        "generation"
+      ],
+      "triggers": [
+        "video",
+        "routing",
+        "editing",
+        "composition",
+        "generation",
+        "router",
+        "route",
+        "brief",
+        "deterministic",
+        "supplied",
+        "footage",
+        "automatic"
+      ],
+      "path": "skills/video-router/SKILL.md"
     },
     {
       "id": "videodb",

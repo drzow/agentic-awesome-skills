@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-02T16:27:13.000Z",
+  "generatedAt": "2026-08-09T06:51:55.000Z",
   "bundles": {
     "core-dev": {
       "description": "Core development skills across languages, frameworks, and backend/frontend fundamentals.",
@@ -836,6 +836,7 @@
         "odoo-edi-connector",
         "odoo-inventory-optimizer",
         "pci-compliance",
+        "people-data",
         "php-pro",
         "polars",
         "postgres-best-practices",
@@ -1031,6 +1032,7 @@
         "service-mesh-expert",
         "service-mesh-observability",
         "shipping-and-launch",
+        "shopify-review-triage",
         "skill-installer",
         "slo-implementation",
         "snowflake-development",
@@ -1253,6 +1255,7 @@
         "shopify-apps",
         "shopify-automation",
         "shopify-development",
+        "shopify-review-triage",
         "skill-creator",
         "skyvern-browser-automation",
         "slack-automation",
@@ -1516,6 +1519,7 @@
         "shopify-apps",
         "shopify-automation",
         "shopify-development",
+        "shopify-review-triage",
         "stripe-automation",
         "stripe-integration",
         "telegram-bot-builder",

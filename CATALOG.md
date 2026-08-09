@@ -1,8 +1,8 @@
 # Skill Catalog
 
-Generated at: 2026-08-02T16:27:13.000Z
+Generated at: 2026-08-09T06:51:55.000Z
 
-Total skills: 2001
+Total skills: 2007
 
 ## agent-behavior (5)
 
@@ -124,13 +124,13 @@ Total skills: 2001
 | `claude-win11-speckit-update-skill` | Windows 11 system management | safe | https://github.com/NotMyself/claude-win11-speckit-update-skill | claude, win11, speckit, update, skill | claude, win11, speckit, update, skill, windows, 11 |
 | `computer-use-agents` | Build AI agents that interact with computers like humans do - viewing screens, moving cursors, clicking buttons, and typing text. Covers Anthropic's Computer... | critical | vibeship-spawner-skills (Apache 2.0) | computer, use, agents | computer, use, agents, ai, interact, computers, like, humans, do, viewing, screens, moving |
 | `computer-vision-expert` | SOTA Computer Vision Expert (2026). Specialized in YOLO26, Segment Anything 3 (SAM 3), Vision Language Models, and real-time spatial analysis. | critical | community | computer, vision | computer, vision, sota, 2026, specialized, yolo26, segment, anything, sam, language, models, real |
-| `context-agent` | Agente de contexto para continuidade entre sessoes. Salva resumos, decisoes, tarefas pendentes e carrega briefing automatico na sessao seguinte. | safe | community | context, session-management, continuity, memory | context, session-management, continuity, memory, agent, agente, de, contexto, para, continuidade, entre, sessoes |
+| `context-agent` | Agente de contexto para continuidade entre sessoes. Salva resumos, decisoes, tarefas pendentes e carrega briefing automatico na sessao seguinte. | critical | community | context, session-management, continuity, memory | context, session-management, continuity, memory, agent, agente, de, contexto, para, continuidade, entre, sessoes |
 | `context-compression` | When agent sessions generate millions of tokens of conversation history, compression becomes mandatory. The naive approach is aggressive compression to minim... | none | community | compression | compression, context, agent, sessions, generate, millions, tokens, conversation, history, becomes, mandatory, naive |
 | `context-degradation` | Language models exhibit predictable degradation patterns as context length increases. Understanding these patterns is essential for diagnosing failures and d... | none | community | degradation | degradation, context, language, models, exhibit, predictable, length, increases, understanding, these, essential, diagnosing |
 | `context-driven-development` | Guide for implementing and maintaining context as a managed artifact alongside code, enabling consistent AI interactions and team alignment through structure... | critical | community | driven | driven, context, development, implementing, maintaining, managed, artifact, alongside, code, enabling, consistent, ai |
 | `context-engineering` | Optimizes agent context setup. Use when starting a new session, when agent output quality degrades, when switching between tasks, or when you need to configu... | critical | addyosmani/agent-skills | engineering | engineering, context, optimizes, agent, setup, starting, new, session, output, quality, degrades, switching |
 | `context-fundamentals` | Context is the complete state available to a language model at inference time. It includes everything the model can attend to when generating responses: syst... | none | community | fundamentals | fundamentals, context, complete, state, available, language, model, inference, time, includes, everything, attend |
-| `context-guardian` | Guardiao de contexto que preserva dados criticos antes da compactacao automatica. Snapshots, verificacao de integridade e zero perda de informacao. | safe | community | context, data-integrity, snapshots, verification | context, data-integrity, snapshots, verification, guardian, guardiao, de, contexto, que, preserva, dados, criticos |
+| `context-guardian` | Guardiao de contexto que preserva dados criticos antes da compactacao automatica. Snapshots, verificacao de integridade e zero perda de informacao. | critical | community | context, data-integrity, snapshots, verification | context, data-integrity, snapshots, verification, guardian, guardiao, de, contexto, que, preserva, dados, criticos |
 | `context-management-context-restore` | Use when working with context management context restore | critical | community | restore | restore, context, working |
 | `context-management-context-save` | Use when working with context management context save | critical | community | save | save, context, working |
 | `context-manager` | Elite AI context engineering specialist mastering dynamic context management, vector databases, knowledge graphs, and intelligent memory systems. | safe | community | manager | manager, context, elite, ai, engineering, mastering, dynamic, vector, databases, knowledge, graphs, intelligent |
@@ -201,7 +201,7 @@ Total skills: 2001
 | `train-sentence-transformers` | Train or fine-tune sentence-transformers models across `SentenceTransformer` (bi-encoder; dense or static embedding model; for retrieval, similarity, cluster... | critical | huggingface/skills | train, sentence, transformers | train, sentence, transformers, fine, tune, models, sentencetransformer, bi, encoder, dense, static, embedding |
 | `trl-training` | Train and fine-tune transformer language models using TRL (Transformers Reinforcement Learning). Supports SFT, DPO, GRPO, KTO, RLOO and Reward Model training... | critical | huggingface/skills | trl, training | trl, training, train, fine, tune, transformer, language, models, transformers, reinforcement, learning, supports |
 | `ui-skills` | Opinionated, evolving constraints to guide agents when building interfaces | safe | https://github.com/ibelick/ui-skills | ui, skills | ui, skills, opinionated, evolving, constraints, agents, building, interfaces |
-| `unified-ai-gateway` | Operate and evaluate Unified AI System through eight governed MCP tools while preserving fake-provider, authorization, and evidence boundaries. | critical | happy520ai/unified-ai-system | ai-gateway, codex, mcp, self-hosted, governance | ai-gateway, codex, mcp, self-hosted, governance, unified, ai, gateway, operate, evaluate, through, eight |
+| `unified-ai-gateway` | Operate and evaluate Unified AI System through nine governed MCP tools, including provider-free prompt enhancement, while preserving fake-provider, authoriza... | critical | happy520ai/unified-ai-system | ai-gateway, codex, mcp, self-hosted, governance | ai-gateway, codex, mcp, self-hosted, governance, unified, ai, gateway, operate, evaluate, through, nine |
 | `unslop-commit` | Rewrites commit messages so they sound like a careful human engineer wrote them. Strips AI/marketing slop ("comprehensive solution", "robust implementation",... | critical | MohamedAbdallah-14/unslop | unslop, commit | unslop, commit, rewrites, messages, so, sound, like, careful, human, engineer, wrote, them |
 | `unslop-file` | Humanize natural-language memory files (CLAUDE.md, todos, preferences, docs) by removing AI-isms and adding burstiness while preserving every code block, URL... | critical | MohamedAbdallah-14/unslop | unslop, file | unslop, file, humanize, natural, language, memory, files, claude, md, todos, preferences, docs |
 | `voice-agents` | Voice agents represent the frontier of AI interaction - humans speaking naturally with AI systems. | safe | vibeship-spawner-skills (Apache 2.0) | voice, agents | voice, agents, represent, frontier, ai, interaction, humans, speaking, naturally |
@@ -1478,7 +1478,7 @@ Total skills: 2001
 | `leiloeiro-mercado` | Analise de mercado imobiliario para leiloes. Liquidez, desagio tipico, ROI, estrategias de saida (flip/reforma/renda), Selic 2025 e benchmark CDI/FII. | safe | community | market-analysis, real-estate, roi, brazilian | market-analysis, real-estate, roi, brazilian, leiloeiro, mercado, analise, de, imobiliario, para, leiloes, liquidez |
 | `leiloeiro-risco` | Analise de risco em leiloes de imoveis. Score 36 pontos, riscos juridicos/financeiros/operacionais, stress test 4 cenarios e ROI ponderado por risco. | safe | community | risk-analysis, scoring, stress-test, brazilian | risk-analysis, scoring, stress-test, brazilian, leiloeiro, risco, analise, de, em, leiloes, imoveis, score |
 
-## marketing (56)
+## marketing (57)
 
 | Skill | Description | Risk | Source | Tags | Triggers |
 | --- | --- | --- | --- | --- | --- |
@@ -1515,6 +1515,7 @@ Total skills: 2001
 | `marketing-ideas` | Provide proven marketing strategies and growth ideas for SaaS and software products, prioritized using a marketing feasibility scoring system. | safe | community | marketing, ideas | marketing, ideas, provide, proven, growth, saas, software, products, prioritized, feasibility, scoring |
 | `marketing-psychology` | Apply behavioral science and mental models to marketing decisions, prioritized using a psychological leverage and feasibility scoring system. | none | community | marketing, psychology | marketing, psychology, apply, behavioral, science, mental, models, decisions, prioritized, psychological, leverage, feasibility |
 | `onboarding-cro` | You are an expert in user onboarding and activation. Your goal is to help users reach their "aha moment" as quickly as possible and establish habits that lea... | critical | community | onboarding, cro | onboarding, cro, user, activation, goal, users, reach, aha, moment, quickly, possible, establish |
+| `outreachagent` | Operate reply-aware cold outbound email workflows for AI agents with inboxes, contacts, templates, pacing, approvals, webhooks, and delivery metrics. | critical | self | email, cold-outreach, sales, ai-agents, workflows, deliverability, webhooks, rest-api | email, cold-outreach, sales, ai-agents, workflows, deliverability, webhooks, rest-api, outreachagent, operate, reply, aware |
 | `page-cro` | Analyze and optimize individual pages for conversion performance. | none | community | page, cro | page, cro, analyze, optimize, individual, pages, conversion, performance |
 | `paid-ads` | You are an expert performance marketer with direct access to ad platform accounts. Your goal is to help create, optimize, and scale paid advertising campaign... | critical | community | paid, ads | paid, ads, performance, marketer, direct, access, ad, platform, accounts, goal, optimize, scale |
 | `paywall-upgrade-cro` | You are an expert in in-app paywalls and upgrade flows. Your goal is to convert free users to paid, or upgrade users to higher tiers, at moments when they've... | critical | community | paywall, upgrade, cro | paywall, upgrade, cro, app, paywalls, flows, goal, convert, free, users, paid, higher |
@@ -1546,14 +1547,16 @@ Total skills: 2001
 | `ai-dev-jobs-mcp` | Search 8,400+ AI and ML jobs across 489 companies, inspect listings and employers, match roles, and view salary and market stats via AI Dev Jobs MCP | safe | https://aidevboard.com | mcp, jobs, ai-jobs, ml-jobs, recruiting, job-search, career | mcp, jobs, ai-jobs, ml-jobs, recruiting, job-search, career, ai, dev, search, 400, ml |
 | `not-human-search-mcp` | Search AI-ready websites, inspect indexed site details, verify MCP endpoints, and discover tools and APIs using the Not Human Search MCP server | safe | https://nothumansearch.ai | mcp, search, ai-discovery, api-discovery, mcp-verification, agent-tools | mcp, search, ai-discovery, api-discovery, mcp-verification, agent-tools, human, ai, websites, inspect, indexed, site |
 
-## media (6)
+## media (8)
 
 | Skill | Description | Risk | Source | Tags | Triggers |
 | --- | --- | --- | --- | --- | --- |
+| `generate-nanobanana` | Generate and edit images/video with Google's Gemini media models (Nano Banana 2/Pro, Gemini Omni Flash), with cost-approval gates, reference-image support, a... | critical | AntonioCardenas/generate-nanobanana | nanobanana, gemini, google-ai-studio, image-generation, video-generation | nanobanana, gemini, google-ai-studio, image-generation, video-generation, generate, edit, images, video, google, media, models |
 | `image-generator` | Generate and edit images using Gemini's Nano Banana Pro model (gemini-3-pro-image-preview). Use this skill when the user asks you to generate images, create ... | safe | dair-ai/dair-academy-plugins | dair-academy, ai, workflow | dair-academy, ai, workflow, image, generator, generate, edit, images, gemini, nano, banana, pro |
 | `remotion` | Generate walkthrough videos from Stitch projects using Remotion with smooth transitions, zooming, and text overlays | critical | community | remotion | remotion, generate, walkthrough, videos, stitch, smooth, transitions, zooming, text, overlays |
 | `remotion-best-practices` | Best practices for Remotion - Video creation in React | safe | community | remotion, video, react, animation, composition | remotion, video, react, animation, composition, creation |
 | `stability-ai` | Geracao de imagens via Stability AI (SD3.5, Ultra, Core). Text-to-image, img2img, inpainting, upscale, remove-bg, search-replace. 15 estilos artisticos. | safe | community | image-generation, stable-diffusion, ai-art, api | image-generation, stable-diffusion, ai-art, api, stability, ai, geracao, de, imagens, via, sd3, ultra |
+| `video-router` | Route a video-production brief to generation, deterministic composition, supplied-footage editing, or an automatic cross-modal plan before production begins. | none | Orkas-AI/Orkas-VideoStudio | video, routing, editing, composition, generation | video, routing, editing, composition, generation, router, route, brief, deterministic, supplied, footage, automatic |
 | `videodb` | Video and audio perception, indexing, and editing. Ingest files/URLs/live streams, build visual/spoken indexes, search with timestamps, edit timelines, add o... | safe | community | video, editing, transcription, subtitles, search, streaming, ai-generation, media, live-streams, desktop-capture | video, editing, transcription, subtitles, search, streaming, ai-generation, media, live-streams, desktop-capture, videodb, audio |
 | `videodb-skills` | Upload, stream, search, edit, transcribe, and generate AI video and audio using the VideoDB SDK. | safe | community | video, editing, transcription, subtitles, search, streaming, ai-generation, media | video, editing, transcription, subtitles, search, streaming, ai-generation, media, videodb, skills, upload, stream |
 
@@ -1711,13 +1714,14 @@ Total skills: 2001
 | `nanobanana-ppt-skills` | AI-powered PPT generation with document analysis and styled images | safe | https://github.com/op7418/NanoBanana-PPT-Skills | nanobanana, ppt, skills | nanobanana, ppt, skills, ai, powered, generation, document, analysis, styled, images |
 | `pptx-official` | A user may ask you to create, edit, or analyze the contents of a .pptx file. A .pptx file is essentially a ZIP archive containing XML files and other resourc... | critical | community | pptx, official | pptx, official, user, may, ask, edit, analyze, contents, file, essentially, zip, archive |
 
-## product (3)
+## product (4)
 
 | Skill | Description | Risk | Source | Tags | Triggers |
 | --- | --- | --- | --- | --- | --- |
 | `before-you-build` | Review product risk before coding by checking demand, alternatives, channels, switching costs, and failure signals. | safe | bin1874/before-you-build-skill | product-validation, planning, ai-coding, risk-review | product-validation, planning, ai-coding, risk-review, before, review, product, risk, coding, checking, demand, alternatives |
 | `idea-autopsy` | Autopsy a business idea before you build it: kill-list check, five hard filters, a free-AI one-prompt test, live ad-market verification, and a verdict with a... | critical | hafiz-actyte/idea-autopsy | business-ideas, idea-validation, market-research, startup, founders | business-ideas, idea-validation, market-research, startup, founders, idea, autopsy, business, before, kill, list, check |
 | `product-decision-agent` | 中文产品决策 Agent。用于需求优先级、Roadmap、增长、留存、运营、数据异常、A/B Test、项目延期和跨团队协作；先判断事实、阶段、核心阻塞与主导机制，再给出下一步、停止清单和切换条件。默认中文，不引用原文或讲历史。 | safe | atdy/maoxuan-product-agent | product-management, decision-making, growth, operations, chinese | product-management, decision-making, growth, operations, chinese, product, decision, agent, roadmap, test |
+| `shopify-review-triage` | Turn public 1-3-star Shopify App Store review rows into a P0-P3 triage brief: incident risk, repeated friction, pricing confusion, feature requests, and an e... | none | alfredtech2026/shopify-app-review-brief | shopify, app-store-reviews, customer-feedback, triage, product-management, support | shopify, app-store-reviews, customer-feedback, triage, product-management, support, review, turn, public, star, app, store |
 
 ## product-management (1)
 
@@ -1820,7 +1824,7 @@ Total skills: 2001
 | `slo-implementation` | Framework for defining and implementing Service Level Indicators (SLIs), Service Level Objectives (SLOs), and error budgets. | critical | community | slo | slo, framework, defining, implementing, level, indicators, slis, objectives, slos, error, budgets |
 | `tool-use-guardian` | FREE — Intelligent tool-call reliability wrapper. Monitors, retries, fixes, and learns from tool failures. Auto-recovers from truncated JSON, timeouts, rate ... | safe | community | reliability, tool-use, error-handling, retries, recovery, agent-infrastructure | reliability, tool-use, error-handling, retries, recovery, agent-infrastructure, guardian, free, intelligent, call, wrapper, monitors |
 
-## research (10)
+## research (11)
 
 | Skill | Description | Risk | Source | Tags | Triggers |
 | --- | --- | --- | --- | --- | --- |
@@ -1830,6 +1834,7 @@ Total skills: 2001
 | `ii-commons` | Deterministic search across arXiv, PubMed/PMC, and US policy corpora with daily freshness cutoffs. | safe | Intelligent-Internet/II-Commons-Skills | research, arxiv, pubmed, pmc, policy, retrieval, cli, codex | research, arxiv, pubmed, pmc, policy, retrieval, cli, codex, ii, commons, deterministic, search |
 | `news-sentiment-engine` | Multi-source RSS news aggregation with Claude-powered sentiment analysis and structured briefing output | critical | tellmefrankie/news-engine | news, rss, sentiment-analysis, briefing, research | news, rss, sentiment-analysis, briefing, research, sentiment, engine, multi, source, aggregation, claude, powered |
 | `papers-skill` | Skill for academic research workflows: search Semantic Scholar (200M+ papers), inspect citations, download arXiv PDFs, and extract PDF text. Bundles a self-c... | safe | xwmxcz/papers-skill | research, academic, papers, citations, arxiv, semantic-scholar, pdf | research, academic, papers, citations, arxiv, semantic-scholar, pdf, skill, search, semantic, scholar, 200m |
+| `people-data` | Research LinkedIn professional profiles and public business-contact data, including email/phone lookup, people search, and YouTube channel business-email dis... | safe | agentbody/skills | linkedin, youtube, people-search, business-contacts, research | linkedin, youtube, people-search, business-contacts, research, people, data, professional, profiles, public, business, contact |
 | `pi-web-search` | Give Pi Agents a safe web-search and fetch workflow using the installed pi-web-access package. | safe | davidondrej/skills | web-search, pi-agent, research | web-search, pi-agent, research, pi, web, search, give, agents, safe, fetch, installed, access |
 | `research-prompt` | Turn vague research needs into one precise deep-research prompt with context and output criteria. | safe | davidondrej/skills | research, prompting, briefs | research, prompting, briefs, prompt, turn, vague, one, precise, deep, context, output, criteria |
 | `survey-generator` | Generate source-backed AI/ML survey paper artifacts with curated bibliographies and Fireworks/Kimi HTML rendering. | safe | dair-ai/dair-academy-plugins | dair-academy, ai, workflow | dair-academy, ai, workflow, survey, generator, generate, source, backed, ml, paper, artifacts, curated |
@@ -2039,6 +2044,12 @@ Total skills: 2001
 | Skill | Description | Risk | Source | Tags | Triggers |
 | --- | --- | --- | --- | --- | --- |
 | `android-cli` | Orchestrates Android development tasks including project creation, deployment, SDK management, and environment diagnostics using the `android` command-line t... | critical | self | android, cli, adb, mobile, build, emulator | android, cli, adb, mobile, build, emulator, orchestrates, development, tasks, including, creation, deployment |
+
+## travel (1)
+
+| Skill | Description | Risk | Source | Tags | Triggers |
+| --- | --- | --- | --- | --- | --- |
+| `travel-planner` | 旅行/行程规划需求时使用:规划去某地旅行、X天X城、带老人孩子、自驾、假期安排等。产出逐日行程表、预算估算(经济/舒适/奢华三档)、交通住宿建议、景点美食清单。必须先问预算,预算未确认只输出问题清单;事实数据带来源和查询日期。 | safe | saudademjj/luopan | travel, itinerary, planning, trip, chinese | travel, itinerary, planning, trip, chinese, planner |
 
 ## uncategorized (286)
 

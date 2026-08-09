@@ -1,3 +1,22 @@
+# Maintenance Walkthrough - 2026-08-09
+
+- Resolved the dangling `resources/implementation-playbook.md` instruction in
+  `context-driven-development` by pointing readers to the complete workflow and
+  validation material already bundled in the skill.
+- Restored Markdown rendering for every reported TypeScript example in
+  `conversation-memory` and `context-window-management` with balanced,
+  language-labelled code fences.
+- Made the intended Brazilian Portuguese operating language explicit and
+  internally consistent in `context-agent` and `context-guardian`, while
+  retaining the English discovery and limitations headings required by catalog
+  validation.
+- Corrected both context skills from `safe` to `critical` because their bundled
+  commands write local state and can archive or remove old context artifacts;
+  added exact approval, backup, path, and platform limitations without changing
+  the bundled runtime scripts.
+- Kept the repair source-only. Generated catalogs and plugin mirrors remain
+  owned by the protected canonical synchronization lane.
+
 # Secur0 coordinated remediation - 2026-07-30
 
 - Re-evaluated all 35 Secur0 reports against current protected `main`: 22 were
@@ -403,3 +422,10 @@
 - Expanded skill-review fingerprints and workflow triggers to cover bundled support files, and tightened unsafe guidance in the affected canonical skills.
 - Fixed native Windows ACL inspection for AAS preview by making PowerShell path handling explicit and returning bounded phase/path diagnostics for unresolved ACL identities.
 - Added regression coverage for every confirmed code-path finding and documented the Windows 10/11 Codex CLI preview contract from discussion `#956`.
+
+# Maintenance Walkthrough - 2026-08-06 Agent Plugins 1.0 Portability
+
+- Added a standard root `plugin.json` to every editorial bundle that passes the existing Codex/Claude safety gates and the Agent Plugins immediate-child skill-layout rule.
+- Kept the host-specific full-library roots separate, flattened qualified paths only inside generated packages, and normalized AAS provenance/risk fields into standard string metadata without changing instruction bodies.
+- Pinned offline validation to an attributed snapshot of the official Agent Plugins 1.0.0 JSON Schema, added deterministic Codex prompt fallbacks, and covered closed-schema, fixed-discovery, pilot-bundle, and release-alignment regressions.
+- Updated the user onboarding trinity, plugin/bundle guides, maintainer contract, and release checklist while leaving the active release-notes PR untouched.
