@@ -1,0 +1,29 @@
+[package]
+name = "aas"
+version = "1.0.0"
+edition = "2021"
+description = "Minimal-context skill management for ~1,907 agentic skills"
+license = "MIT"
+
+[[bin]]
+name = "aas"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+git2 = { version = "0.19", features = ["https", "ssh"] }
+sha2 = "0.10"
+hex = "0.4"
+tempfile = "3.14"
+anyhow = "1.0"
+thiserror = "2.0"
+dirs = "5.0"
+walkdir = "2.5"
+
+[profile.release]
+opt-level = 2
+lto = true
+strip = true
