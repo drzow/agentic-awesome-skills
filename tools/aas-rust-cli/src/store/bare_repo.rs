@@ -158,17 +158,89 @@ impl BareStore {
         Ok(head.target().ok_or_else(|| anyhow!("no HEAD after fetch"))?.to_string())
     }
 
+    /// Discover the primary branch name for a bare repository using a 3-tier strategy:
+    /// 1. Read `init.defaultBranch` from repo config
+    /// 2. Resolve symbolic HEAD (e.g., `refs/heads/main`) in the bare repo
+    /// 3. Scan `refs/heads/*`, preferring common names in order: main, master, default, trunk
+    fn default_branch_name(repo: &Repository) -> Result<String> {
+        // Strategy 1: check git config init.defaultBranch
+        if let Ok(cfg) = repo.config() {
+            if let Ok(val) = cfg.get_string("init.defaultBranch") {
+                return Ok(val);
+            }
+        }
+
+        // Strategy 2: resolve HEAD to get the default branch
+        if let Ok(head) = repo.head() {
+            if let Some(refname) = head.symbolic_target() {
+                if let Some(branch) = refname.strip_prefix("refs/heads/") {
+                    return Ok(branch.to_string());
+                }
+            }
+        }
+
+        // Strategy 3: iterate refs and check for common branch names in order of preference
+        let candidates = ["main", "master", "default", "trunk"];
+        let mut best_match: Option<(usize, String)> = None;
+        let mut found_any_ref = false;
+
+        for entry in repo.references()? {
+            let entry = entry?;
+            if let Some(name) = entry.name() {
+                if let Some(branch) = name.strip_prefix("refs/heads/") {
+                    found_any_ref = true;
+                    for (idx, candidate) in candidates.iter().enumerate() {
+                        if branch == *candidate {
+                            match &best_match {
+                                Some((best_idx, _)) if *best_idx <= idx => {}
+                                _ => { best_match = Some((idx, candidate.to_string())); }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if let Some((_idx, branch)) = best_match {
+            return Ok(branch);
+        }
+
+        // If no common name matched but branches exist, return the first one found
+        if found_any_ref {
+            for entry in repo.references()? {
+                let entry = entry?;
+                if let Some(name) = entry.name() {
+                    if let Some(branch) = name.strip_prefix("refs/heads/") {
+                        return Ok(branch.to_string());
+                    }
+                    // Also check remote tracking refs as fallback
+                    if let Some(branch) = name.strip_prefix("refs/remotes/origin/") {
+                        return Ok(branch.to_string());
+                    }
+                }
+            }
+        }
+
+        Err(anyhow!(
+            "could not determine default branch: no refs/heads/* found; \
+             ensure the repository has at least one branch and fetch completed successfully"
+        ))
+    }
+
     /// Update a ref to point at the given SHA, triggering index rebuild.
     pub fn update_ref(&self, sha: &str) -> Result<()> {
         let repo = Repository::open_bare(&self.store_path)?;
         let oid = git2::Oid::from_str(sha)
             .map_err(|e| anyhow!("invalid SHA '{}': {}", sha, e))?;
 
-        // Update refs/heads/main to the new commit.
-        let _current_id = repo.refname_to_id("refs/heads/main")
-            .map_err(|e| anyhow!("refs/heads/main not found: {}", e))?;
+        let branch_name = Self::default_branch_name(&repo)?;
 
-        let mut reference = repo.find_reference("refs/heads/main")?;
+        // Update the discovered default branch ref to the new commit.
+        let _current_id = repo.refname_to_id(&branch_name)
+            .map_err(|e| anyhow!("{} not found: {}", branch_name, e))?;
+
+        let mut reference = repo.find_reference(&branch_name)?;
         reference.set_target(oid, "update: fetch from origin")?;
         Ok(())
     }
