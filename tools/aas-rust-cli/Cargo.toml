@@ -1,6 +1,6 @@
 [package]
 name = "aas"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Minimal-context skill management for ~1,907 agentic skills"
 license = "MIT"

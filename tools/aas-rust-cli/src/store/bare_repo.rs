@@ -87,6 +87,22 @@ impl BareStore {
         origin.fetch(&mut ["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
             .map_err(|e| anyhow!("clone failed: {}", e))?;
 
+        // After fetching a bare repo, HEAD may not point to any existing branch.
+        // Discover the default branch and set HEAD as a symbolic ref to it.
+        let default_branch = Self::default_branch_name(&repo)?;
+        if let Ok(mut head_ref) = repo.find_reference("HEAD") {
+            if head_ref.symbolic_target().is_some() {
+                head_ref.symbolic_set_target(
+                    &format!("refs/heads/{}", default_branch),
+                    "init: set HEAD to default branch",
+                )?;
+            } else {
+                repo.reference_symbolic("HEAD", &format!("refs/heads/{}", default_branch), true, "init: set HEAD to ...")?;
+            }
+        } else {
+            repo.reference_symbolic("HEAD", &format!("refs/heads/{}", default_branch), true, "init: set HEAD to ...")?;
+        }
+
         Ok(Self {
             store_path: store_path.to_string_lossy().to_string(),
         })
@@ -166,15 +182,24 @@ impl BareStore {
         // Strategy 1: check git config init.defaultBranch
         if let Ok(cfg) = repo.config() {
             if let Ok(val) = cfg.get_string("init.defaultBranch") {
-                return Ok(val);
+                let full_ref = format!("refs/heads/{}", val);
+                if repo.refname_to_id(&full_ref).is_ok() {
+                    return Ok(val);
+                }
             }
         }
 
         // Strategy 2: resolve HEAD to get the default branch
         if let Ok(head) = repo.head() {
             if let Some(refname) = head.symbolic_target() {
-                if let Some(branch) = refname.strip_prefix("refs/heads/") {
-                    return Ok(branch.to_string());
+                if refname.starts_with("refs/heads/") {
+                    if let Ok(oid) = repo.refname_to_id(refname) {
+                        if repo.find_object(oid, None).map(|o| o.kind() == Some(git2::ObjectType::Commit)).unwrap_or(false) {
+                            if let Some(branch) = refname.strip_prefix("refs/heads/") {
+                                return Ok(branch.to_string());
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -235,12 +260,14 @@ impl BareStore {
             .map_err(|e| anyhow!("invalid SHA '{}': {}", sha, e))?;
 
         let branch_name = Self::default_branch_name(&repo)?;
-
-        // Update the discovered default branch ref to the new commit.
-        let _current_id = repo.refname_to_id(&branch_name)
-            .map_err(|e| anyhow!("{} not found: {}", branch_name, e))?;
-
-        let mut reference = repo.find_reference(&branch_name)?;
+        let full_ref = if branch_name.starts_with("refs/") {
+            branch_name.clone()
+        } else {
+            format!("refs/heads/{}", branch_name)
+        };
+        let _current_id = repo.refname_to_id(&full_ref)
+            .map_err(|e| anyhow!("{} not found: {}", full_ref, e))?;
+        let mut reference = repo.find_reference(&full_ref)?;
         reference.set_target(oid, "update: fetch from origin")?;
         Ok(())
     }
