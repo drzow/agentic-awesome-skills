@@ -66,7 +66,7 @@ npm run build                        # full sync chain: validate → index → b
 
 ## Development Methodology
 
-Every task — feature development, debugging, or fixes — follows a multi-agent workflow:
+**MANDATORY:** Every task — feature development, debugging, or fixes — follows a multi-agent workflow. Do not skip this process for any reason, including small changes and urgent requests. The quality bar exists because shortcuts have caused regressions in the past.
 
 1. **Three developers** each receive the same task and work on separate git worktrees.
 2. A **master implementer** collects all three implementations, takes the best from each, and synthesizes a complete solution.
@@ -75,6 +75,8 @@ Every task — feature development, debugging, or fixes — follows a multi-agen
 5. The approved solution is committed and pushed only to the local repo (the git worktree source). It should merge to `main` if not already on it.
 
 Do not push upstream to any remote repos unless explicitly instructed.
+
+> **Note:** When working alone, simulate this workflow by examining the problem from at least three independent angles (e.g., data flow analysis, code path tracing, and hypothesis testing via reproduction). The master implementer step is represented by synthesizing findings into a coherent fix. Reviewers are represented by critical self-review of the synthesized solution before committing.
 
 ## Agent-Specific Notes
 
