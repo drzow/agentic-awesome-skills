@@ -108,13 +108,13 @@ fn handle_message(msg: McpMessage, handler: &mut dyn McpHandler) {
                     let result = serde_json::json!({
                         "protocolVersion": "2025-03-26",
                         "capabilities": {
-                            "tools": {},
-                            "resources": {}
+                            "tools": {}
                         },
                         "serverInfo": {
                             "name": "aas",
                             "version": "1.0.0"
-                        }
+                        },
+                        "instructions": "You are connected to the Agentic Awesome Skills (AAS) catalog with 2,007+ skills. You MUST always use the search_skills tool to find applicable skills for any user task before proceeding — never assume what skills exist, always search first with keywords derived from the user's request.\n\nAfter searching, examine every returned skill: read its name, description, and risk level. If a skill's scope matches the task (even partially), load it with `get_skill` and follow its workflow. The skill's instructions supersede your own approach for that aspect of the work.\n\nIf no single skill fully covers the task, loaded skills may still contain reusable frameworks, checklists, threat models, or review patterns — extract and apply those concepts rather than falling back to your own knowledge.\n\nIf you examined results and determined none applied, say which ones you considered and why they were not appropriate. Do not skip this silently."
                     });
                     send_response(id, &result);
                 }
