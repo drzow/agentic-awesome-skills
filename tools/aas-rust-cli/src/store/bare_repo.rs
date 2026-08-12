@@ -317,21 +317,29 @@ impl BareStore {
         unreachable!("loop always returns for non-empty components")
     }
 
-    /// Alias for [`Self::read_blob_at_path`] — returns the raw blob bytes.
+    /// Alias for [`Self::read_blob_at_path`] — reads `SKILL.md` for a skill by id.
     pub fn get_blob_at_path(&self, id: &str) -> Result<Vec<u8>> {
-        self.read_blob_at_path(id)
+        let path = format!("skills/{}/SKILL.md", id);
+        self.read_blob_at_path(&path)
     }
 
-    /// List all skill directory names (subdirectories containing SKILL.md).
+    /// List all skill directory names (subdirectories of `skills/` containing SKILL.md).
     pub fn list_skill_dirs(&self) -> Result<Vec<String>> {
         let repo = Repository::open_bare(&self.store_path)?;
         let head = repo.head()?;
         let commit = repo.find_commit(head.target().unwrap())?;
         let tree = commit.tree()?;
 
-        // List directories at root that contain SKILL.md.
+        // Navigate into the `skills/` subdirectory.
+        let skills_entry = tree.get_name("skills")
+            .ok_or_else(|| anyhow!("no 'skills/' directory found in repo root"))?;
+        let skills_obj = skills_entry.to_object(&repo)?;
+        let skills_tree = skills_obj.as_tree()
+            .ok_or_else(|| anyhow!("skills/ is not a tree"))?;
+
+        // List directories inside `skills/` that contain SKILL.md.
         let mut ids = Vec::new();
-        for entry in tree.iter() {
+        for entry in skills_tree.iter() {
             if let Some(dir_name) = entry.name() {
                 let child_obj = entry.to_object(&repo)?;
                 if let Some(child_tree) = child_obj.as_tree() {
