@@ -245,7 +245,7 @@ fn mcp_server(base_dir: &PathBuf) -> Result<()> {
     let server = McpServer::new(base_dir)
         .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    println!("AAS MCP server starting on stdio...");
+    eprintln!("AAS MCP server starting on stdio...");
     mcp::server::start_server(Box::new(server));
     Ok(())
 }
