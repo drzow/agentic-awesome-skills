@@ -14,20 +14,63 @@ enum McpMessage {
     Notification { method: String, params: Option<Value> },
 }
 
+const MAX_STDIN_LINE_BYTES: usize = 1024 * 1024;
+
 /// Start the MCP stdio server loop.
 pub fn start_server(mut handler: Box<dyn McpHandler>) {
     let stdin = io::stdin();
-    let reader = stdin.lock();
+    let mut reader = stdin.lock();
 
-    for line in reader.lines() {
-        let line = match line {
-            Ok(l) => l,
-            Err(_) => break,
-        };
+    loop {
+        match read_capped_line(&mut reader, MAX_STDIN_LINE_BYTES) {
+            Ok(Some(line)) => {
+                if let Some(response) = handle_line(&line, handler.as_mut()) {
+                    println!("{}", response);
+                    io::stdout().flush().ok();
+                }
+            }
+            Ok(None) => break,
+            Err(e) => {
+                eprintln!("MCP stdin line too long: {}", e);
+                let response = jsonrpc_response(
+                    None,
+                    Err(McpError {
+                        code: -32600,
+                        message: "stdin line exceeds 1 MiB limit".to_string(),
+                    }),
+                );
+                println!("{}", serde_json::to_string(&response).expect("failed to serialize error response"));
+                io::stdout().flush().ok();
+                break;
+            }
+        }
+    }
+}
 
-        if let Some(response) = handle_line(&line, handler.as_mut()) {
-            println!("{}", response);
-            io::stdout().flush().ok();
+fn read_capped_line(reader: &mut impl BufRead, max_bytes: usize) -> io::Result<Option<String>> {
+    let mut buf: Vec<u8> = Vec::new();
+    let mut chunk = [0u8; 8192];
+
+    loop {
+        let n = reader.read(&mut chunk)?;
+        if n == 0 {
+            if buf.is_empty() {
+                return Ok(None);
+            }
+            return Ok(Some(String::from_utf8_lossy(&buf).into_owned()));
+        }
+
+        for &byte in &chunk[..n] {
+            if byte == b'\n' {
+                return Ok(Some(String::from_utf8_lossy(&buf).into_owned()));
+            }
+            if buf.len() >= max_bytes {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "line exceeds maximum length",
+                ));
+            }
+            buf.push(byte);
         }
     }
 }
@@ -279,5 +322,30 @@ mod tests {
     fn blank_line_gets_no_response() {
         let mut handler = TestHandler;
         assert!(handle_line("   ", &mut handler).is_none());
+    }
+
+    #[test]
+    fn read_capped_line_reads_normal_line() {
+        let mut reader = io::Cursor::new(b"hello\nworld");
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), Some("hello".to_string()));
+    }
+
+    #[test]
+    fn read_capped_line_reads_final_line_without_newline() {
+        let mut reader = io::Cursor::new(b"hello");
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), Some("hello".to_string()));
+    }
+
+    #[test]
+    fn read_capped_line_returns_none_on_empty_input() {
+        let mut reader = io::Cursor::new(b"");
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), None);
+    }
+
+    #[test]
+    fn read_capped_line_rejects_overlong_line() {
+        let input = vec![b'x'; 32];
+        let mut reader = io::Cursor::new(input);
+        assert!(read_capped_line(&mut reader, 16).is_err());
     }
 }
