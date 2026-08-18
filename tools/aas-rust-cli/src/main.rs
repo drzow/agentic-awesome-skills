@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod cache;
 mod cli;
@@ -33,6 +33,9 @@ enum Commands {
         /// Force re-initialization (delete existing store).
         #[arg(long, default_value_t = false)]
         force: bool,
+        /// Disable TLS and SSH host-key verification for this invocation.
+        #[arg(long, default_value_t = false)]
+        insecure_no_tls_verify: bool,
     },
 
     /// Fetch from origin and rebuild index if changed.
@@ -40,6 +43,9 @@ enum Commands {
         /// Don't actually update, just show what would change.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        /// Disable TLS and SSH host-key verification for this invocation.
+        #[arg(long, default_value_t = false)]
+        insecure_no_tls_verify: bool,
     },
 
     /// Show store info, index stats, and version.
@@ -134,7 +140,7 @@ mod shellexpand {
     pub fn full(s: &str) -> Result<AllocatedString, ()> {
         if let Some(rest) = s.strip_prefix("~/") {
             if let Some(home) = dirs::home_dir() {
-                return Ok(AllocatedString(format!("{}", home.join(rest).display())));
+                return Ok(AllocatedString(home.join(rest).display().to_string()));
             }
         }
         Err(())
@@ -154,11 +160,32 @@ fn main() -> Result<()> {
     let base_dir = resolve_base(&cli.base);
 
     match cli.command {
-        Some(Commands::Init { repo, force }) => {
-            cli::init::init(&repo, &base_dir, force)?;
+        Some(Commands::Init {
+            repo,
+            force,
+            insecure_no_tls_verify,
+        }) => {
+            let resolution = store::bare_repo::resolve_insecure_tls_verify(
+                insecure_no_tls_verify,
+                std::env::var("AAS_SKIP_TLS_VERIFY").ok().as_deref(),
+            );
+            if resolution.from_deprecated_env {
+                eprintln!("WARNING: AAS_SKIP_TLS_VERIFY is deprecated; use --insecure-no-tls-verify.");
+            }
+            cli::init::init(&repo, &base_dir, force, resolution.enabled)?;
         }
-        Some(Commands::Update { dry_run }) => {
-            cli::update::update(&base_dir, dry_run)?;
+        Some(Commands::Update {
+            dry_run,
+            insecure_no_tls_verify,
+        }) => {
+            let resolution = store::bare_repo::resolve_insecure_tls_verify(
+                insecure_no_tls_verify,
+                std::env::var("AAS_SKIP_TLS_VERIFY").ok().as_deref(),
+            );
+            if resolution.from_deprecated_env {
+                eprintln!("WARNING: AAS_SKIP_TLS_VERIFY is deprecated; use --insecure-no-tls-verify.");
+            }
+            cli::update::update(&base_dir, dry_run, resolution.enabled)?;
         }
         Some(Commands::Status) => {
             cli::status::run(&base_dir)?;
@@ -177,7 +204,7 @@ fn main() -> Result<()> {
             }
             let index = index::reader::load_index(&index_path)?;
             let categories = search::scoring::list_categories(&index);
-            println!("{:<30} {}", "Category", "Count");
+            println!("{:<30} Count", "Category");
             println!("{}", "-".repeat(42));
             for (name, count) in &categories {
                 println!("{:<30} {}", name, count);
@@ -239,13 +266,13 @@ fn parse_targets(targets: &str) -> Vec<String> {
     targets.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect()
 }
 
-fn mcp_server(base_dir: &PathBuf) -> Result<()> {
+fn mcp_server(base_dir: &Path) -> Result<()> {
     use crate::mcp::tools::McpServer;
 
     let server = McpServer::new(base_dir)
         .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    println!("AAS MCP server starting on stdio...");
+    eprintln!("AAS MCP server starting on stdio...");
     mcp::server::start_server(Box::new(server));
     Ok(())
 }

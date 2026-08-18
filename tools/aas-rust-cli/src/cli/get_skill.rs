@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::store::bare_repo::BareStore;
 use crate::utils::path_validation;
 
 /// Fetch and print the full SKILL.md for a skill.
-pub fn run(base_dir: &PathBuf, skill_id: &str) -> Result<()> {
+pub fn run(base_dir: &Path, skill_id: &str) -> Result<()> {
     // Validate skill ID for safety
     path_validation::validate_skill_id(skill_id)
         .map_err(|e| anyhow!("invalid skill ID: {}", e))?;

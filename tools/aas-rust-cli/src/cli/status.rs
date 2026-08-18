@@ -1,9 +1,9 @@
 use anyhow::Result;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Show store info, index stats, and version.
-pub fn run(base_dir: &PathBuf) -> Result<()> {
+pub fn run(base_dir: &Path) -> Result<()> {
     let store_path = base_dir.join("store");
     let index_path = base_dir.join("index.json");
     let meta_path = base_dir.join("meta/state.json");

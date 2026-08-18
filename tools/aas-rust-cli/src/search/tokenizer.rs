@@ -19,17 +19,9 @@ fn split_tokens(text: &str) -> Vec<String> {
     for ch in text.chars() {
         if ch.is_alphanumeric() || ch == '\'' {
             current.push(ch);
-        } else {
-            if !current.is_empty() {
-                result.extend(split_token_word(&current));
-                current.clear();
-            }
-            if ch == '-' || ch == '_' {
-                if !current.is_empty() {
-                    result.extend(split_token_word(&current));
-                    current.clear();
-                }
-            }
+        } else if !current.is_empty() {
+            result.extend(split_token_word(&current));
+            current.clear();
         }
     }
 
@@ -86,25 +78,25 @@ mod tests {
     #[test]
     fn test_tokenize_basic() {
         let tokens = tokenize("hello world");
-        assert!(tokens.contains(&"hello".to_string()));
-        assert!(tokens.contains(&"world".to_string()));
+        assert!(tokens.contains("hello"));
+        assert!(tokens.contains("world"));
     }
 
     #[test]
     fn test_tokenize_camelcase() {
         let tokens = tokenize("myAwesomeSkill");
-        assert!(tokens.contains(&"my".to_string()));
-        assert!(tokens.contains(&"awesome".to_string()));
-        assert!(tokens.contains(&"skill".to_string()));
+        assert!(tokens.contains("my"));
+        assert!(tokens.contains("awesome"));
+        assert!(tokens.contains("skill"));
     }
 
     #[test]
     fn test_tokenize_query() {
         let tokens = tokenize_query("security scanning CI pipeline");
-        assert!(tokens.contains(&"security".to_string()));
-        assert!(tokens.contains(&"scanning".to_string()));
-        assert!(tokens.contains(&"ci".to_string()));
-        assert!(tokens.contains(&"pipeline".to_string()));
+        assert!(tokens.iter().any(|t| t == "security"));
+        assert!(tokens.iter().any(|t| t == "scanning"));
+        assert!(tokens.iter().any(|t| t == "ci"));
+        assert!(tokens.iter().any(|t| t == "pipeline"));
     }
 
     #[test]

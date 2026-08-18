@@ -1,11 +1,11 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::index::reader;
 use crate::search;
 
 /// List skills filtered by category, risk, or tags.
-pub fn run(base_dir: &PathBuf, category: Option<&str>, risk: Option<&str>, tags: Vec<String>, limit: usize) -> Result<()> {
+pub fn run(base_dir: &Path, category: Option<&str>, risk: Option<&str>, tags: Vec<String>, limit: usize) -> Result<()> {
     let index_path = base_dir.join("index.json");
     if !index_path.exists() {
         eprintln!("Index not found. Run 'aas init' first.");
@@ -21,7 +21,7 @@ pub fn run(base_dir: &PathBuf, category: Option<&str>, risk: Option<&str>, tags:
         return Ok(());
     }
 
-    println!("{:<30} {:<15} {:<6} {}", "Name", "Category", "Risk", "ID");
+    println!("{:<30} {:<15} {:<6} ID", "Name", "Category", "Risk");
     println!("{}", "-".repeat(70));
 
     for r in &results {

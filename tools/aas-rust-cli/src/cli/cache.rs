@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use chrono::Duration;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::cache::manifest::CacheManifest;
 use crate::cache::eviction;
 
-pub fn run(base_dir: &PathBuf, command: &str, older_than_days: Option<u64>) -> Result<()> {
+pub fn run(base_dir: &Path, command: &str, older_than_days: Option<u64>) -> Result<()> {
     let cache_dir = base_dir.join("cache");
     let manifest_path = cache_dir.join("manifest.json");
 

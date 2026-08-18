@@ -9,6 +9,6 @@ pub fn atomic_write(path: &Path, data: &[u8]) -> Result<(), io::Error> {
     fs::create_dir_all(parent)?;
     let tmp = NamedTempFile::new_in(parent)?;
     tmp.as_file().write_all(data)?;
-    tmp.persist(path).map_err(|e| io::Error::new(io::ErrorKind::Other, format!("persist: {}", e)))?;
+    tmp.persist(path).map_err(|e| io::Error::other(format!("persist: {e}")))?;
     Ok(())
 }

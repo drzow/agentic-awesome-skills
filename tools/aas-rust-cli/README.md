@@ -88,6 +88,17 @@ aas update
 aas update --dry-run
 ```
 
+## Insecure Verification
+
+For internal registries with self-signed certificates, disable TLS and SSH host-key verification for a single invocation:
+
+```bash
+aas init --repo https://internal.example/skills.git --insecure-no-tls-verify
+aas update --insecure-no-tls-verify
+```
+
+`AAS_SKIP_TLS_VERIFY` remains supported as a deprecated compatibility path and prints a warning when it enables insecure verification.
+
 ## Cache Management
 
 ```bash

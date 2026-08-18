@@ -155,6 +155,7 @@ mod tests {
             schema_version: 1,
             catalog_digest: "sha256:test".to_string(),
             generated_at: chrono::Utc::now(),
+            catalog_version: None,
             skill_count: skills.len(),
             skills,
         };
@@ -174,6 +175,7 @@ mod tests {
             schema_version: 1,
             catalog_digest: "sha256:test".to_string(),
             generated_at: chrono::Utc::now(),
+            catalog_version: None,
             skill_count: skills.len(),
             skills,
         };
@@ -193,6 +195,7 @@ mod tests {
             schema_version: 1,
             catalog_digest: "sha256:test".to_string(),
             generated_at: chrono::Utc::now(),
+            catalog_version: None,
             skill_count: skills.len(),
             skills,
         };
@@ -213,6 +216,7 @@ mod tests {
             schema_version: 1,
             catalog_digest: "sha256:test".to_string(),
             generated_at: chrono::Utc::now(),
+            catalog_version: None,
             skill_count: skills.len(),
             skills,
         };

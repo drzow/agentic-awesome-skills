@@ -5,7 +5,8 @@ use crate::index::reader;
 use crate::search;
 use crate::store::bare_repo::BareStore;
 use crate::cache::manifest::CacheManifest as Manifest;
-use std::path::PathBuf;
+use crate::utils::path_validation::validate_skill_id;
+use std::path::{Path, PathBuf};
 
 /// MCP server that provides skill search and retrieval tools.
 pub struct McpServer {
@@ -33,7 +34,7 @@ impl crate::mcp::server::McpHandler for McpServer {
 
 impl McpServer {
     /// Create a new MCP server from the given base directory.
-    pub fn new(base_dir: &PathBuf) -> Result<Self, String> {
+    pub fn new(base_dir: &Path) -> Result<Self, String> {
         let store_path = base_dir.join("store");
         if !store_path.exists() {
             return Err("store not found. Run 'aas init' first.".to_string());
@@ -59,7 +60,7 @@ impl McpServer {
             index,
             store,
             cache_manifest,
-            base_dir: base_dir.clone(),
+            base_dir: base_dir.to_path_buf(),
         })
     }
 
@@ -68,9 +69,7 @@ impl McpServer {
             .and_then(|v| v.as_str())
             .ok_or("missing required field 'query'")?;
 
-        let limit = args.get("limit")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(20) as usize;
+        let limit = parse_limit(&args, 20, 50);
 
         let results = search::scoring::search(&self.index, query, limit);
 
@@ -89,6 +88,8 @@ impl McpServer {
         let id = args.get("id")
             .and_then(|v| v.as_str())
             .ok_or("missing required field 'id'")?;
+
+        validate_skill_id(id)?;
 
         let include_content = args.get("include_content")
             .and_then(|v| v.as_bool())
@@ -182,9 +183,7 @@ impl McpServer {
             })
             .unwrap_or_default();
 
-        let limit = args.get("limit")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(50) as usize;
+        let limit = parse_limit(&args, 50, 200);
 
         let results = search::scoring::filter(&self.index, category, risk, &tags, limit);
 
@@ -205,4 +204,38 @@ fn compute_sha256(content: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(content.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+fn parse_limit(args: &Value, default: u64, max: u64) -> usize {
+    args.get("limit")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(default)
+        .min(max) as usize
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn parse_limit_uses_default_when_missing() {
+        assert_eq!(parse_limit(&json!({}), 20, 50), 20);
+    }
+
+    #[test]
+    fn parse_limit_clamps_to_max() {
+        assert_eq!(parse_limit(&json!({"limit": u64::MAX}), 20, 50), 50);
+        assert_eq!(parse_limit(&json!({"limit": u64::MAX}), 50, 200), 200);
+    }
+
+    #[test]
+    fn parse_limit_allows_values_below_max() {
+        assert_eq!(parse_limit(&json!({"limit": 7}), 20, 50), 7);
+    }
+
+    #[test]
+    fn parse_limit_ignores_non_numeric_values() {
+        assert_eq!(parse_limit(&json!({"limit": "10"}), 20, 50), 20);
+    }
 }

@@ -5,8 +5,9 @@ use std::path::Path;
 /// A bare-git-backed skill store.
 ///
 /// The store is a bare repository that may be fetched from over HTTPS or SSH.
-/// TLS verification can be disabled via `AAS_SKIP_TLS_VERIFY` for internal
-/// registries with self-signed certificates.
+/// TLS verification can be disabled explicitly with `--insecure-no-tls-verify`
+/// for internal registries with self-signed certificates.
+/// `AAS_SKIP_TLS_VERIFY` remains available as a deprecated compatibility path.
 pub struct BareStore {
     pub store_path: String,
 }
@@ -23,59 +24,14 @@ impl BareStore {
     }
 
     /// Initialise a new bare store by cloning from the given URL.
-    pub fn init(repo_url: &str, store_path: &Path) -> Result<Self> {
+    pub fn init(
+        repo_url: &str,
+        store_path: &Path,
+        skip_tls_verify: bool,
+    ) -> Result<Self> {
         println!("Cloning {} into {:?}", repo_url, store_path);
 
-        // Configure callbacks for TLS / SSH.
-        let mut remote_callbacks = RemoteCallbacks::new();
-
-        if should_skip_tls() {
-            eprintln!(
-                "WARNING: AAS_SKIP_TLS_VERIFY is set — all certificate verification is DISABLED (both HTTPS TLS and SSH hostkey)."
-            );
-        }
-
-        remote_callbacks.certificate_check(|_cert, url| {
-            if should_skip_tls() {
-                return Ok(CertificateCheckStatus::CertificateOk);
-            }
-            println!("Certificate check for {}: skipping (use native TLS in production)", url);
-            Ok(CertificateCheckStatus::CertificatePassthrough)
-        });
-
-        // SSH credential callback with explicit fallback chain.
-        // Attempt order:
-        // 1. `ssh-agent` — uses any keys loaded in the running agent.
-        // 2. Filesystem keys — tries ~/.ssh/id_rsa, id_ed25519, id_ecdsa.
-        // 3. Default (Cred::default()) — falls back to git2's default
-        //    credential resolution, which may ask the user interactively or
-        //    delegate to an external helper (e.g. OS keychain, gpg-agent).
-        remote_callbacks.credentials(|_url, username_from_url, _allowed| {
-            let user = username_from_url.unwrap_or("git");
-            if let Ok(builder) = Cred::ssh_key_from_agent(user) {
-                return Ok(builder);
-            }
-            let home = dirs::home_dir().map(|h| h.to_path_buf()).unwrap_or_default();
-            for key_path in [
-                home.join(".ssh").join("id_rsa"),
-                home.join(".ssh").join("id_ed25519"),
-                home.join(".ssh").join("id_ecdsa"),
-            ] {
-                if key_path.exists() {
-                    if let Ok(builder) = Cred::ssh_key_from_memory(
-                        user,
-                        None,
-                        &std::fs::read_to_string(&key_path).ok().unwrap_or_default(),
-                        None,
-                    ) {
-                        return Ok(builder);
-                    }
-                }
-            }
-            // Cred::default() does not panic — it returns a credential that
-            // will ask the user interactively or delegate to an external helper.
-            Cred::default()
-        });
+        let remote_callbacks = remote_callbacks_for(skip_tls_verify);
 
         let mut fetch_opts = FetchOptions::new();
         fetch_opts.remote_callbacks(remote_callbacks);
@@ -83,8 +39,8 @@ impl BareStore {
         // Perform initial clone into the store path.
         Repository::init_bare(store_path)?;
         let repo = Repository::open(store_path)?;
-        let mut origin = repo.remote_anonymous(repo_url)?;
-        origin.fetch(&mut ["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        let mut origin = repo.remote("origin", repo_url)?;
+        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
             .map_err(|e| anyhow!("clone failed: {}", e))?;
 
         // After fetching a bare repo, HEAD may not point to any existing branch.
@@ -109,64 +65,16 @@ impl BareStore {
     }
 
     /// Fetch latest from origin, returning the new HEAD SHA.
-    pub fn fetch(&self) -> Result<String> {
+    pub fn fetch(&self, skip_tls_verify: bool) -> Result<String> {
         let repo = Repository::open_bare(&self.store_path)?;
 
-        let mut callbacks = RemoteCallbacks::new();
-
-        if should_skip_tls() {
-            eprintln!(
-                "WARNING: AAS_SKIP_TLS_VERIFY is set — all certificate verification is DISABLED (both HTTPS TLS and SSH hostkey)."
-            );
-        }
-
-        callbacks.certificate_check(|_cert, url| {
-            if should_skip_tls() {
-                return Ok(CertificateCheckStatus::CertificateOk);
-            }
-            println!("Certificate check for {}: skipping (use native TLS in production)", url);
-            Ok(CertificateCheckStatus::CertificatePassthrough)
-        });
-
-        // SSH credential callback with explicit fallback chain.
-        // Attempt order:
-        // 1. `ssh-agent` — uses any keys loaded in the running agent.
-        // 2. Filesystem keys — tries ~/.ssh/id_rsa, id_ed25519, id_ecdsa.
-        // 3. Default (Cred::default()) — falls back to git2's default
-        //    credential resolution, which may ask the user interactively or
-        //    delegate to an external helper (e.g. OS keychain, gpg-agent).
-        callbacks.credentials(|_url, username_from_url, _allowed| {
-            let user = username_from_url.unwrap_or("git");
-            if let Ok(builder) = Cred::ssh_key_from_agent(user) {
-                return Ok(builder);
-            }
-            let home = dirs::home_dir().map(|h| h.to_path_buf()).unwrap_or_default();
-            for key_path in [
-                home.join(".ssh").join("id_rsa"),
-                home.join(".ssh").join("id_ed25519"),
-                home.join(".ssh").join("id_ecdsa"),
-            ] {
-                if key_path.exists() {
-                    if let Ok(builder) = Cred::ssh_key_from_memory(
-                        user,
-                        None,
-                        &std::fs::read_to_string(&key_path).ok().unwrap_or_default(),
-                        None,
-                    ) {
-                        return Ok(builder);
-                    }
-                }
-            }
-            // Cred::default() does not panic — it returns a credential that
-            // will ask the user interactively or delegate to an external helper.
-            Cred::default()
-        });
+        let callbacks = remote_callbacks_for(skip_tls_verify);
 
         let mut fetch_opts = FetchOptions::new();
         fetch_opts.remote_callbacks(callbacks);
 
         let mut origin = repo.find_remote("origin")?;
-        origin.fetch(&mut ["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
             .map_err(|e| anyhow!("fetch failed: {}", e))?;
 
         // Return the new HEAD SHA.
@@ -290,7 +198,7 @@ impl BareStore {
         let mut current_tree = tree;
 
         for (i, component) in components.iter().enumerate() {
-            let entry_id = current_tree.get_name(*component)
+            let entry_id = current_tree.get_name(component)
                 .map(|e| e.id())
                 .ok_or_else(|| anyhow!("path component not found: {}", component))?;
 
@@ -321,6 +229,105 @@ impl BareStore {
     pub fn get_blob_at_path(&self, id: &str) -> Result<Vec<u8>> {
         let path = format!("skills/{}/SKILL.md", id);
         self.read_blob_at_path(&path)
+    }
+
+    /// Extract the full skill tree for `id` from the store into `dest_dir/{id}/...`.
+    ///
+    /// Walks the git tree at `skills/{id}/` recursively and writes every blob,
+    /// creating parent directories. Errors if the skill directory or its
+    /// `SKILL.md` is missing.
+    pub fn extract_skill(&self, id: &str, dest_dir: &Path) -> Result<()> {
+        crate::utils::path_validation::validate_skill_id(id)
+            .map_err(|e| anyhow!("invalid skill ID '{}': {}", id, e))?;
+
+        let repo = Repository::open_bare(&self.store_path)?;
+        let head = repo.head()?;
+        let head_oid = head
+            .target()
+            .ok_or_else(|| anyhow!("store has no HEAD commit"))?;
+        let commit = repo.find_commit(head_oid)?;
+        let tree = commit.tree()?;
+
+        let skills_entry = tree
+            .get_name("skills")
+            .ok_or_else(|| anyhow!("no 'skills/' directory found in repo root"))?;
+        let skills_tree = repo
+            .find_tree(skills_entry.id())
+            .map_err(|_| anyhow!("skills/ is not a tree"))?;
+
+        let skill_entry = skills_tree
+            .get_name(id)
+            .ok_or_else(|| anyhow!("skill '{}' not found in store", id))?;
+        let skill_tree = repo
+            .find_tree(skill_entry.id())
+            .map_err(|_| anyhow!("skill '{}' is not a directory", id))?;
+
+        if skill_tree.get_name("SKILL.md").is_none() {
+            return Err(anyhow!("skill '{}' is missing SKILL.md", id));
+        }
+
+        Self::write_tree_to_disk(&repo, &skill_tree, &dest_dir.join(id))?;
+        Ok(())
+    }
+
+    /// Recursively write a git tree to disk rooted at `dest`.
+    fn write_tree_to_disk(repo: &Repository, tree: &git2::Tree, dest: &Path) -> Result<()> {
+        std::fs::create_dir_all(dest)?;
+        for entry in tree.iter() {
+            let name = entry
+                .name()
+                .ok_or_else(|| anyhow!("tree entry without a name in skill tree"))?;
+            let out_path = dest.join(name);
+
+            if entry.filemode() == i32::from(git2::FileMode::Link) {
+                let blob = repo
+                    .find_blob(entry.id())
+                    .map_err(|_| anyhow!("not a blob: {}", name))?;
+                let target = String::from_utf8(blob.content().to_vec())
+                    .map_err(|_| anyhow!("symlink target for '{}' is not valid UTF-8", name))?;
+                if out_path.is_symlink() || out_path.exists() {
+                    std::fs::remove_file(&out_path)?;
+                }
+                crate::utils::platform::create_symlink(Path::new(&target), &out_path)
+                    .map_err(|e| anyhow!("failed to create symlink for '{}': {}", name, e))?;
+                continue;
+            }
+
+            match entry.kind() {
+                Some(git2::ObjectType::Blob) => {
+                    let blob = repo
+                        .find_blob(entry.id())
+                        .map_err(|_| anyhow!("not a blob: {}", name))?;
+                    let content = blob.content().to_vec();
+                    if let Some(parent) = out_path.parent() {
+                        std::fs::create_dir_all(parent)?;
+                    }
+                    std::fs::write(&out_path, content)?;
+                    if entry.filemode() == i32::from(git2::FileMode::BlobExecutable) {
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            let mut perms = std::fs::metadata(&out_path)?.permissions();
+                            perms.set_mode(perms.mode() | 0o111);
+                            std::fs::set_permissions(&out_path, perms)?;
+                        }
+                    }
+                }
+                Some(git2::ObjectType::Tree) => {
+                    let subtree = repo
+                        .find_tree(entry.id())
+                        .map_err(|_| anyhow!("not a tree: {}", name))?;
+                    Self::write_tree_to_disk(repo, &subtree, &out_path)?;
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "unsupported git object type for '{}' in skill tree",
+                        name
+                    ))
+                }
+            }
+        }
+        Ok(())
     }
 
     /// List all skill directory names (subdirectories of `skills/` containing SKILL.md).
@@ -363,9 +370,9 @@ impl BareStore {
     pub fn head_sha(&self) -> Result<String> {
         let repo = Repository::open_bare(&self.store_path)?;
         let head = repo.head()?;
-        Ok(head.target()
+        head.target()
             .map(|oid| oid.to_string())
-            .ok_or_else(|| anyhow!("no HEAD"))?)
+            .ok_or_else(|| anyhow!("no HEAD"))
     }
 
     /// Get the root tree SHA for catalog digest.
@@ -375,6 +382,43 @@ impl BareStore {
         let commit = repo.find_commit(head.target().unwrap())?;
         let tree = commit.tree()?;
         Ok(tree.id().to_string())
+    }
+
+    /// Read the catalog version from `.claude-plugin/plugin.json` at HEAD.
+    pub fn catalog_version(&self) -> Result<Option<String>> {
+        let repo = Repository::open_bare(&self.store_path)?;
+        let head = repo.head()?;
+        let head_oid = head
+            .target()
+            .ok_or_else(|| anyhow!("store has no HEAD commit"))?;
+        let commit = repo.find_commit(head_oid)?;
+        let tree = commit.tree()?;
+
+        let plugin_dir_entry = match tree.get_name(".claude-plugin") {
+            Some(entry) => entry,
+            None => return Ok(None),
+        };
+        let plugin_dir = repo
+            .find_tree(plugin_dir_entry.id())
+            .map_err(|_| anyhow!(".claude-plugin is not a tree"))?;
+
+        let plugin_json_entry = match plugin_dir.get_name("plugin.json") {
+            Some(entry) => entry,
+            None => return Ok(None),
+        };
+        let blob = repo
+            .find_blob(plugin_json_entry.id())
+            .map_err(|_| anyhow!("plugin.json is not a blob"))?;
+        let content = std::str::from_utf8(blob.content())
+            .map_err(|_| anyhow!("plugin.json is not valid UTF-8"))?;
+        let value: serde_json::Value =
+            serde_json::from_str(content).map_err(|e| anyhow!("failed to parse plugin.json: {}", e))?;
+
+        Ok(value
+            .get("version")
+            .and_then(|v| v.as_str())
+            .filter(|v| !v.is_empty())
+            .map(|v| v.to_string()))
     }
 
     /// Get the number of refs (branches) in the store.
@@ -388,15 +432,97 @@ impl BareStore {
         }
         Ok(count)
     }
+
+    /// Ensure the store has an `origin` remote, repairing stores created
+    /// before `init` persisted the remote.
+    pub fn ensure_origin(&self, repo_url: &str) -> Result<()> {
+        let repo = Repository::open_bare(&self.store_path)?;
+        if repo.find_remote("origin").is_ok() {
+            return Ok(());
+        }
+        repo.remote("origin", repo_url)?;
+        Ok(())
+    }
 }
 
-/// Check whether TLS certificate verification should be skipped.
+/// Build the git2 callbacks used for network fetches.
+fn remote_callbacks_for(skip_tls_verify: bool) -> RemoteCallbacks<'static> {
+    if skip_tls_verify {
+        eprintln!(
+            "WARNING: certificate verification is DISABLED (both HTTPS TLS and SSH hostkey)."
+        );
+    }
+
+    let mut callbacks = RemoteCallbacks::new();
+
+    callbacks.certificate_check(move |_cert, url| {
+        if skip_tls_verify {
+            return Ok(CertificateCheckStatus::CertificateOk);
+        }
+        println!("Certificate check for {}: skipping (use native TLS in production)", url);
+        Ok(CertificateCheckStatus::CertificatePassthrough)
+    });
+
+    // SSH credential callback with explicit fallback chain.
+    // Attempt order:
+    // 1. `ssh-agent` — uses any keys loaded in the running agent.
+    // 2. Filesystem keys — tries ~/.ssh/id_rsa, id_ed25519, id_ecdsa.
+    // 3. Default (Cred::default()) — falls back to git2's default
+    //    credential resolution, which may ask the user interactively or
+    //    delegate to an external helper (e.g. OS keychain, gpg-agent).
+    callbacks.credentials(|_url, username_from_url, _allowed| {
+        let user = username_from_url.unwrap_or("git");
+        if let Ok(builder) = Cred::ssh_key_from_agent(user) {
+            return Ok(builder);
+        }
+        let home = dirs::home_dir().map(|h| h.to_path_buf()).unwrap_or_default();
+        for key_path in [
+            home.join(".ssh").join("id_rsa"),
+            home.join(".ssh").join("id_ed25519"),
+            home.join(".ssh").join("id_ecdsa"),
+        ] {
+            if key_path.exists() {
+                if let Ok(builder) = Cred::ssh_key_from_memory(
+                    user,
+                    None,
+                    &std::fs::read_to_string(&key_path).ok().unwrap_or_default(),
+                    None,
+                ) {
+                    return Ok(builder);
+                }
+            }
+        }
+        // Cred::default() does not panic — it returns a credential that
+        // will ask the user interactively or delegate to an external helper.
+        Cred::default()
+    });
+
+    callbacks
+}
+
+/// Resolve whether the current invocation should skip TLS verification.
 ///
-/// Returns `true` if the `AAS_SKIP_TLS_VERIFY` environment variable is set to
-/// a truthy value (case-insensitive): `1`, `true`, `yes`, or `on`.
-pub fn should_skip_tls() -> bool {
-    std::env::var("AAS_SKIP_TLS_VERIFY")
-        .ok()
+/// The explicit CLI flag is preferred. `AAS_SKIP_TLS_VERIFY` remains supported
+/// as a deprecated compatibility path.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InsecureTlsResolution {
+    pub enabled: bool,
+    pub from_deprecated_env: bool,
+}
+
+pub fn resolve_insecure_tls_verify(
+    cli_flag: bool,
+    env_value: Option<&str>,
+) -> InsecureTlsResolution {
+    let from_deprecated_env = skip_tls_from_value(env_value);
+    InsecureTlsResolution {
+        enabled: cli_flag || from_deprecated_env,
+        from_deprecated_env,
+    }
+}
+
+fn skip_tls_from_value(value: Option<&str>) -> bool {
+    value
         .map(|v| matches!(v.to_lowercase().as_str(), "1" | "true" | "yes" | "on"))
         .unwrap_or(false)
 }
@@ -424,61 +550,203 @@ impl RepositoryExt for Repository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
     fn test_should_skip_tls_defaults_false() {
-        // Ensure the env var is unset.
-        let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", None);
-        assert!(!should_skip_tls());
+        assert!(!skip_tls_from_value(None));
     }
 
     #[test]
     fn test_should_skip_tls_various_truthy_values() {
         for val in &["1", "true", "yes", "on"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(should_skip_tls(), "expected '{}' to be truthy", val);
+            assert!(skip_tls_from_value(Some(val)), "expected '{}' to be truthy", val);
         }
     }
 
     #[test]
     fn test_should_skip_tls_various_falsy_values() {
         for val in &["0", "false", "no", "off", "random"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(!should_skip_tls(), "expected '{}' to be falsy", val);
+            assert!(!skip_tls_from_value(Some(val)), "expected '{}' to be falsy", val);
         }
     }
 
     #[test]
     fn test_should_skip_tls_case_insensitive() {
         for val in &["TRUE", "True", "YES", "Yes", "ON", "On"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(should_skip_tls(), "expected '{}' (case-insensitive) to be truthy", val);
+            assert!(
+                skip_tls_from_value(Some(val)),
+                "expected '{}' (case-insensitive) to be truthy",
+                val
+            );
         }
     }
 
-    struct TestEnvGuard {
-        key: String,
-        prev: Option<String>,
+    #[test]
+    fn test_resolve_insecure_tls_verify_flag_only() {
+        let resolution = resolve_insecure_tls_verify(true, Some("0"));
+        assert!(resolution.enabled);
+        assert!(!resolution.from_deprecated_env);
     }
 
-    impl TestEnvGuard {
-        fn new(key: &str, value: Option<&str>) -> Self {
-            let prev = env::var(key).ok();
-            match value {
-                Some(v) => env::set_var(key, v),
-                None => { env::remove_var(key); }
-            }
-            Self { key: key.to_string(), prev }
-        }
+    #[test]
+    fn test_resolve_insecure_tls_verify_deprecated_env_only() {
+        let resolution = resolve_insecure_tls_verify(false, Some("1"));
+        assert!(resolution.enabled);
+        assert!(resolution.from_deprecated_env);
     }
 
-    impl Drop for TestEnvGuard {
-        fn drop(&mut self) {
-            match &self.prev {
-                Some(v) => env::set_var(&self.key, v),
-                None => env::remove_var(&self.key),
-            }
+    #[test]
+    fn test_resolve_insecure_tls_verify_neither_set() {
+        let resolution = resolve_insecure_tls_verify(false, None);
+        assert!(!resolution.enabled);
+        assert!(!resolution.from_deprecated_env);
+    }
+
+    /// Build a temp bare store containing a multi-file skill:
+    /// `skills/demo-skill/SKILL.md` and `skills/demo-skill/references/x.md`.
+    fn build_test_store(store_path: &Path) -> Result<Repository> {
+        let repo = Repository::init_bare(store_path)?;
+
+        let skill_md = b"---\nname: demo-skill\ndescription: test\n---\n# Demo\n";
+        let ref_x = b"reference content\n";
+
+        let skill_md_oid = repo.blob(skill_md)?;
+        let ref_x_oid = repo.blob(ref_x)?;
+
+        let refs_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("x.md", ref_x_oid, git2::FileMode::Blob.into())?;
+            tb.write()?
+        };
+
+        let skill_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("SKILL.md", skill_md_oid, git2::FileMode::Blob.into())?;
+            tb.insert("references", refs_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let skills_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("demo-skill", skill_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let root_tree_oid = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("skills", skills_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let sig = git2::Signature::now("test", "test@example.com")?;
+        {
+            let root_tree = repo.find_tree(root_tree_oid)?;
+            repo.commit(Some("refs/heads/main"), &sig, &sig, "test commit", &root_tree, &[])?;
         }
+        repo.set_head("refs/heads/main")?;
+
+        Ok(repo)
+    }
+
+    #[test]
+    fn test_extract_skill_writes_full_tree() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        store.extract_skill("demo-skill", &out).unwrap();
+
+        let skill_md = std::fs::read(out.join("demo-skill").join("SKILL.md")).unwrap();
+        assert_eq!(
+            skill_md,
+            b"---\nname: demo-skill\ndescription: test\n---\n# Demo\n"
+        );
+        let ref_x =
+            std::fs::read(out.join("demo-skill").join("references").join("x.md")).unwrap();
+        assert_eq!(ref_x, b"reference content\n");
+    }
+
+    #[test]
+    fn test_extract_skill_missing_skill_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        assert!(store.extract_skill("nope", &out).is_err());
+    }
+
+    #[test]
+    fn test_extract_skill_invalid_id_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        assert!(store.extract_skill("../evil", &out).is_err());
+    }
+
+    /// Build a non-bare source repository with one commit on `refs/heads/main`.
+    fn build_source_repo(source_path: &Path) -> Result<Repository> {
+        let repo = Repository::init(source_path)?;
+        let file_oid = repo.blob(b"source content\n")?;
+        let root_tree_oid = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("file.txt", file_oid, git2::FileMode::Blob.into())?;
+            tb.write()?
+        };
+        let sig = git2::Signature::now("test", "test@example.com")?;
+        {
+            let root_tree = repo.find_tree(root_tree_oid)?;
+            repo.commit(Some("refs/heads/main"), &sig, &sig, "source commit", &root_tree, &[])?;
+        }
+        repo.set_head("refs/heads/main")?;
+        Ok(repo)
+    }
+
+    #[test]
+    fn test_init_persists_origin_remote() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source_path = tmp.path().join("source");
+        build_source_repo(&source_path).unwrap();
+        let store_path = tmp.path().join("store");
+
+        BareStore::init(source_path.to_str().unwrap(), &store_path, false).unwrap();
+
+        let repo = Repository::open_bare(&store_path).unwrap();
+        let origin = repo.find_remote("origin").unwrap();
+        assert_eq!(origin.url().unwrap(), source_path.to_str().unwrap());
+    }
+
+    #[test]
+    fn test_fetch_uses_persisted_origin_remote() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source_path = tmp.path().join("source");
+        build_source_repo(&source_path).unwrap();
+        let store_path = tmp.path().join("store");
+
+        let store = BareStore::init(source_path.to_str().unwrap(), &store_path, false).unwrap();
+        let sha = store.fetch(false).unwrap();
+        assert!(!sha.is_empty());
+    }
+
+    #[test]
+    fn test_ensure_origin_repairs_missing_remote() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source_path = tmp.path().join("source");
+        build_source_repo(&source_path).unwrap();
+        let store_path = tmp.path().join("store");
+        Repository::init_bare(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        store.ensure_origin(source_path.to_str().unwrap()).unwrap();
+
+        let repo = Repository::open_bare(&store_path).unwrap();
+        let origin = repo.find_remote("origin").unwrap();
+        assert_eq!(origin.url().unwrap(), source_path.to_str().unwrap());
     }
 }

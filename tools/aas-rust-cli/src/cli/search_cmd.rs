@@ -1,11 +1,11 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::index::reader;
 use crate::search;
 
 /// Search skills by keyword with relevance scoring.
-pub fn run(base_dir: &PathBuf, query: &str, limit: usize) -> Result<()> {
+pub fn run(base_dir: &Path, query: &str, limit: usize) -> Result<()> {
     let index_path = base_dir.join("index.json");
     if !index_path.exists() {
         eprintln!("Index not found. Run 'aas init' first.");
@@ -20,7 +20,7 @@ pub fn run(base_dir: &PathBuf, query: &str, limit: usize) -> Result<()> {
         return Ok(());
     }
 
-    println!("{:<30} {:<15} {:<6} {}", "Name", "Category", "Risk", "Score");
+    println!("{:<30} {:<15} {:<6} Score", "Name", "Category", "Risk");
     println!("{}", "-".repeat(72));
 
     for r in &results {
