@@ -33,6 +33,9 @@ enum Commands {
         /// Force re-initialization (delete existing store).
         #[arg(long, default_value_t = false)]
         force: bool,
+        /// Disable TLS and SSH host-key verification for this invocation.
+        #[arg(long, default_value_t = false)]
+        insecure_no_tls_verify: bool,
     },
 
     /// Fetch from origin and rebuild index if changed.
@@ -40,6 +43,9 @@ enum Commands {
         /// Don't actually update, just show what would change.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        /// Disable TLS and SSH host-key verification for this invocation.
+        #[arg(long, default_value_t = false)]
+        insecure_no_tls_verify: bool,
     },
 
     /// Show store info, index stats, and version.
@@ -154,11 +160,32 @@ fn main() -> Result<()> {
     let base_dir = resolve_base(&cli.base);
 
     match cli.command {
-        Some(Commands::Init { repo, force }) => {
-            cli::init::init(&repo, &base_dir, force)?;
+        Some(Commands::Init {
+            repo,
+            force,
+            insecure_no_tls_verify,
+        }) => {
+            let resolution = store::bare_repo::resolve_insecure_tls_verify(
+                insecure_no_tls_verify,
+                std::env::var("AAS_SKIP_TLS_VERIFY").ok().as_deref(),
+            );
+            if resolution.from_deprecated_env {
+                eprintln!("WARNING: AAS_SKIP_TLS_VERIFY is deprecated; use --insecure-no-tls-verify.");
+            }
+            cli::init::init(&repo, &base_dir, force, resolution.enabled)?;
         }
-        Some(Commands::Update { dry_run }) => {
-            cli::update::update(&base_dir, dry_run)?;
+        Some(Commands::Update {
+            dry_run,
+            insecure_no_tls_verify,
+        }) => {
+            let resolution = store::bare_repo::resolve_insecure_tls_verify(
+                insecure_no_tls_verify,
+                std::env::var("AAS_SKIP_TLS_VERIFY").ok().as_deref(),
+            );
+            if resolution.from_deprecated_env {
+                eprintln!("WARNING: AAS_SKIP_TLS_VERIFY is deprecated; use --insecure-no-tls-verify.");
+            }
+            cli::update::update(&base_dir, dry_run, resolution.enabled)?;
         }
         Some(Commands::Status) => {
             cli::status::run(&base_dir)?;

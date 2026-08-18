@@ -7,7 +7,12 @@ use crate::store::bare_repo::BareStore;
 use crate::utils::atomic_write;
 
 /// Initialize: clone bare repo and generate initial index.
-pub fn init(repo_url: &str, base_dir: &Path, force: bool) -> Result<()> {
+pub fn init(
+    repo_url: &str,
+    base_dir: &Path,
+    force: bool,
+    skip_tls_verify: bool,
+) -> Result<()> {
     let store_path = base_dir.join("store");
     let index_path = base_dir.join("index.json");
     let meta_dir = base_dir.join("meta");
@@ -22,7 +27,7 @@ pub fn init(repo_url: &str, base_dir: &Path, force: bool) -> Result<()> {
         BareStore::open(&store_path)
             .map_err(|e| anyhow!("existing store is not a valid git repo: {}", e))
     } else {
-        BareStore::init(repo_url, &store_path)
+        BareStore::init(repo_url, &store_path, skip_tls_verify)
     };
     let store = store_result?;
 

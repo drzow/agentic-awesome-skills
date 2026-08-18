@@ -7,7 +7,7 @@ use crate::store::bare_repo::BareStore;
 use crate::utils::atomic_write;
 
 /// Update: fetch from origin and rebuild index if changed.
-pub fn update(base_dir: &Path, dry_run: bool) -> Result<()> {
+pub fn update(base_dir: &Path, dry_run: bool, skip_tls_verify: bool) -> Result<()> {
     let store_path = base_dir.join("store");
     let index_path = base_dir.join("index.json");
     let meta_path = base_dir.join("meta/state.json");
@@ -18,9 +18,17 @@ pub fn update(base_dir: &Path, dry_run: bool) -> Result<()> {
 
     let store = BareStore::open(&store_path)?;
 
+    if meta_path.exists() {
+        if let Ok(content) = fs::read_to_string(&meta_path) {
+            if let Ok(state) = serde_json::from_str::<crate::models::CloneState>(&content) {
+                store.ensure_origin(&state.repo_url)?;
+            }
+        }
+    }
+
     // Fetch latest from origin
     println!("Fetching from origin...");
-    let new_sha = match store.fetch() {
+    let new_sha = match store.fetch(skip_tls_verify) {
         Ok(sha) => sha,
         Err(e) => {
             eprintln!("Warning: fetch failed: {}", e);
