@@ -323,6 +323,105 @@ impl BareStore {
         self.read_blob_at_path(&path)
     }
 
+    /// Extract the full skill tree for `id` from the store into `dest_dir/{id}/...`.
+    ///
+    /// Walks the git tree at `skills/{id}/` recursively and writes every blob,
+    /// creating parent directories. Errors if the skill directory or its
+    /// `SKILL.md` is missing.
+    pub fn extract_skill(&self, id: &str, dest_dir: &Path) -> Result<()> {
+        crate::utils::path_validation::validate_skill_id(id)
+            .map_err(|e| anyhow!("invalid skill ID '{}': {}", id, e))?;
+
+        let repo = Repository::open_bare(&self.store_path)?;
+        let head = repo.head()?;
+        let head_oid = head
+            .target()
+            .ok_or_else(|| anyhow!("store has no HEAD commit"))?;
+        let commit = repo.find_commit(head_oid)?;
+        let tree = commit.tree()?;
+
+        let skills_entry = tree
+            .get_name("skills")
+            .ok_or_else(|| anyhow!("no 'skills/' directory found in repo root"))?;
+        let skills_tree = repo
+            .find_tree(skills_entry.id())
+            .map_err(|_| anyhow!("skills/ is not a tree"))?;
+
+        let skill_entry = skills_tree
+            .get_name(id)
+            .ok_or_else(|| anyhow!("skill '{}' not found in store", id))?;
+        let skill_tree = repo
+            .find_tree(skill_entry.id())
+            .map_err(|_| anyhow!("skill '{}' is not a directory", id))?;
+
+        if skill_tree.get_name("SKILL.md").is_none() {
+            return Err(anyhow!("skill '{}' is missing SKILL.md", id));
+        }
+
+        Self::write_tree_to_disk(&repo, &skill_tree, &dest_dir.join(id))?;
+        Ok(())
+    }
+
+    /// Recursively write a git tree to disk rooted at `dest`.
+    fn write_tree_to_disk(repo: &Repository, tree: &git2::Tree, dest: &Path) -> Result<()> {
+        std::fs::create_dir_all(dest)?;
+        for entry in tree.iter() {
+            let name = entry
+                .name()
+                .ok_or_else(|| anyhow!("tree entry without a name in skill tree"))?;
+            let out_path = dest.join(name);
+
+            if entry.filemode() == i32::from(git2::FileMode::Link) {
+                let blob = repo
+                    .find_blob(entry.id())
+                    .map_err(|_| anyhow!("not a blob: {}", name))?;
+                let target = String::from_utf8(blob.content().to_vec())
+                    .map_err(|_| anyhow!("symlink target for '{}' is not valid UTF-8", name))?;
+                if out_path.is_symlink() || out_path.exists() {
+                    std::fs::remove_file(&out_path)?;
+                }
+                crate::utils::platform::create_symlink(Path::new(&target), &out_path)
+                    .map_err(|e| anyhow!("failed to create symlink for '{}': {}", name, e))?;
+                continue;
+            }
+
+            match entry.kind() {
+                Some(git2::ObjectType::Blob) => {
+                    let blob = repo
+                        .find_blob(entry.id())
+                        .map_err(|_| anyhow!("not a blob: {}", name))?;
+                    let content = blob.content().to_vec();
+                    if let Some(parent) = out_path.parent() {
+                        std::fs::create_dir_all(parent)?;
+                    }
+                    std::fs::write(&out_path, content)?;
+                    if entry.filemode() == i32::from(git2::FileMode::BlobExecutable) {
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            let mut perms = std::fs::metadata(&out_path)?.permissions();
+                            perms.set_mode(perms.mode() | 0o111);
+                            std::fs::set_permissions(&out_path, perms)?;
+                        }
+                    }
+                }
+                Some(git2::ObjectType::Tree) => {
+                    let subtree = repo
+                        .find_tree(entry.id())
+                        .map_err(|_| anyhow!("not a tree: {}", name))?;
+                    Self::write_tree_to_disk(repo, &subtree, &out_path)?;
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "unsupported git object type for '{}' in skill tree",
+                        name
+                    ))
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// List all skill directory names (subdirectories of `skills/` containing SKILL.md).
     pub fn list_skill_dirs(&self) -> Result<Vec<String>> {
         let repo = Repository::open_bare(&self.store_path)?;
@@ -455,6 +554,94 @@ mod tests {
             let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
             assert!(should_skip_tls(), "expected '{}' (case-insensitive) to be truthy", val);
         }
+    }
+
+    /// Build a temp bare store containing a multi-file skill:
+    /// `skills/demo-skill/SKILL.md` and `skills/demo-skill/references/x.md`.
+    fn build_test_store(store_path: &Path) -> Result<Repository> {
+        let repo = Repository::init_bare(store_path)?;
+
+        let skill_md = b"---\nname: demo-skill\ndescription: test\n---\n# Demo\n";
+        let ref_x = b"reference content\n";
+
+        let skill_md_oid = repo.blob(skill_md)?;
+        let ref_x_oid = repo.blob(ref_x)?;
+
+        let refs_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("x.md", ref_x_oid, git2::FileMode::Blob.into())?;
+            tb.write()?
+        };
+
+        let skill_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("SKILL.md", skill_md_oid, git2::FileMode::Blob.into())?;
+            tb.insert("references", refs_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let skills_tree = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("demo-skill", skill_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let root_tree_oid = {
+            let mut tb = repo.treebuilder(None)?;
+            tb.insert("skills", skills_tree, git2::FileMode::Tree.into())?;
+            tb.write()?
+        };
+
+        let sig = git2::Signature::now("test", "test@example.com")?;
+        {
+            let root_tree = repo.find_tree(root_tree_oid)?;
+            repo.commit(Some("refs/heads/main"), &sig, &sig, "test commit", &root_tree, &[])?;
+        }
+        repo.set_head("refs/heads/main")?;
+
+        Ok(repo)
+    }
+
+    #[test]
+    fn test_extract_skill_writes_full_tree() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        store.extract_skill("demo-skill", &out).unwrap();
+
+        let skill_md = std::fs::read(out.join("demo-skill").join("SKILL.md")).unwrap();
+        assert_eq!(
+            skill_md,
+            b"---\nname: demo-skill\ndescription: test\n---\n# Demo\n"
+        );
+        let ref_x =
+            std::fs::read(out.join("demo-skill").join("references").join("x.md")).unwrap();
+        assert_eq!(ref_x, b"reference content\n");
+    }
+
+    #[test]
+    fn test_extract_skill_missing_skill_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        assert!(store.extract_skill("nope", &out).is_err());
+    }
+
+    #[test]
+    fn test_extract_skill_invalid_id_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let store_path = tmp.path().join("store");
+        build_test_store(&store_path).unwrap();
+
+        let store = BareStore::open(&store_path).unwrap();
+        let out = tmp.path().join("out");
+        assert!(store.extract_skill("../evil", &out).is_err());
     }
 
     struct TestEnvGuard {

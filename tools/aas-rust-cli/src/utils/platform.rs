@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::io;
+use std::path::{Path, PathBuf};
 
 /// Get common agent skill directories.
 pub fn agent_skill_dirs() -> Vec<(String, PathBuf)> {
@@ -32,13 +33,37 @@ pub fn get_target(name: &str) -> Option<PathBuf> {
 
 /// Detect if symlinks are supported on this platform.
 pub fn supports_symlinks() -> bool {
+    #[cfg(any(unix, windows))]
+    {
+        // Windows may require admin or developer mode; callers fall back to copy.
+        true
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        false
+    }
+}
+
+/// Create a filesystem symlink from `link` to `target`.
+pub fn create_symlink(target: &Path, link: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(target, link)
+    }
     #[cfg(windows)]
     {
-        // Windows requires admin or developer mode for symlinks
-        true // We'll try and fall back to copy
+        if target.is_dir() {
+            std::os::windows::fs::symlink_dir(target, link)
+        } else {
+            std::os::windows::fs::symlink_file(target, link)
+        }
     }
-    #[cfg(not(windows))]
+    #[cfg(not(any(unix, windows)))]
     {
-        true
+        let _ = (target, link);
+        Err(io::Error::new(
+            io::ErrorKind::Unsupported,
+            "symlinks are not supported on this platform",
+        ))
     }
 }
