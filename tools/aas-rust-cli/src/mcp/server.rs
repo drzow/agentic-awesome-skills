@@ -15,6 +15,8 @@ enum McpMessage {
 }
 
 const MAX_STDIN_LINE_BYTES: usize = 1024 * 1024;
+const DEFAULT_PROTOCOL_VERSION: &str = "2025-03-26";
+const SUPPORTED_PROTOCOL_VERSIONS: &[&str] = &[DEFAULT_PROTOCOL_VERSION];
 
 /// Start the MCP stdio server loop.
 pub fn start_server(mut handler: Box<dyn McpHandler>) {
@@ -48,30 +50,42 @@ pub fn start_server(mut handler: Box<dyn McpHandler>) {
 }
 
 fn read_capped_line(reader: &mut impl BufRead, max_bytes: usize) -> io::Result<Option<String>> {
-    let mut buf: Vec<u8> = Vec::new();
-    let mut chunk = [0u8; 8192];
+    let mut line: Vec<u8> = Vec::new();
 
     loop {
-        let n = reader.read(&mut chunk)?;
-        if n == 0 {
-            if buf.is_empty() {
-                return Ok(None);
+        let buf = match reader.fill_buf() {
+            Ok(buf) if !buf.is_empty() => buf,
+            Ok(_) => {
+                if line.is_empty() {
+                    return Ok(None);
+                }
+                return Ok(Some(String::from_utf8_lossy(&line).into_owned()));
             }
-            return Ok(Some(String::from_utf8_lossy(&buf).into_owned()));
-        }
+            Err(e) => return Err(e),
+        };
 
-        for &byte in &chunk[..n] {
-            if byte == b'\n' {
-                return Ok(Some(String::from_utf8_lossy(&buf).into_owned()));
-            }
-            if buf.len() >= max_bytes {
+        if let Some(newline_offset) = buf.iter().position(|&b| b == b'\n') {
+            if line.len() + newline_offset > max_bytes {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "line exceeds maximum length",
                 ));
             }
-            buf.push(byte);
+            let consume_count = newline_offset + 1;
+            line.extend_from_slice(&buf[..newline_offset]);
+            reader.consume(consume_count);
+            return Ok(Some(String::from_utf8_lossy(&line).into_owned()));
         }
+
+        if line.len() + buf.len() > max_bytes {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "line exceeds maximum length",
+            ));
+        }
+        let consume_count = buf.len();
+        line.extend_from_slice(buf);
+        reader.consume(consume_count);
     }
 }
 
@@ -101,7 +115,7 @@ fn handle_line(line: &str, handler: &mut dyn McpHandler) -> Option<String> {
                 None,
                 Err(McpError {
                     code: -32700,
-                    message: format!("Parse error: {}", e),
+                    message: "Parse error".to_string(),
                 }),
             );
             Some(serde_json::to_string(&response).expect("failed to serialize error response"))
@@ -116,8 +130,14 @@ fn dispatch_request(
     handler: &mut dyn McpHandler,
 ) -> Result<Value, McpError> {
     match method {
-        "initialize" => Ok(serde_json::json!({
-            "protocolVersion": "2025-03-26",
+        "initialize" => {
+            let client_version = params
+                .as_ref()
+                .and_then(|p| p.get("protocolVersion"))
+                .and_then(|v| v.as_str());
+            let protocol_version = negotiate_protocol_version(client_version);
+            Ok(serde_json::json!({
+            "protocolVersion": protocol_version,
             "capabilities": {
                 "tools": {}
             },
@@ -125,8 +145,9 @@ fn dispatch_request(
                 "name": "aas",
                 "version": env!("CARGO_PKG_VERSION")
             },
-            "instructions": "You are connected to the Agentic Awesome Skills (AAS) catalog with 2,007+ skills. You MUST always use the search_skills tool to find applicable skills for any user task before proceeding — never assume what skills exist, always search first with keywords derived from the user's request.\n\nAfter searching, examine every returned skill: read its name, description, and risk level. If a skill's scope matches the task (even partially), load it with `get_skill` and follow its workflow. The skill's instructions supersede your own approach for that aspect of the work.\n\nIf no single skill fully covers the task, loaded skills may still contain reusable frameworks, checklists, threat models, or review patterns — extract and apply those concepts rather than falling back to your own knowledge.\n\nIf you examined results and determined none applied, say which ones you considered and why they were not appropriate. Do not skip this silently."
-        })),
+            "instructions": "You are connected to the Agentic Awesome Skills (AAS) catalog with 2,007+ skills. You MUST always use the search_skills tool to find applicable skills for any user task before proceeding — never assume what skills exist, always search first with keywords derived from the user's request.\n\nAfter searching, examine every returned skill: read its name, description, and risk level. If a skill's scope matches the task (even partially), load it with `get_skill` and follow its workflow. The skill's instructions supersede your own approach for that aspect of the work.\n\nIf no single skill fully covers the task, loaded skills may still contain reusable frameworks, checklists, threat models, or review patterns — extract and apply those concepts rather than falling back to your own knowledge.\n\nIf you examined results and determined none applied, say which ones you considered and why they were not appropriate. Do not skip this silently.",
+        }))
+        }
         "tools/list" => {
             let tools = handler.list_tools();
             Ok(serde_json::json!({ "tools": tools }))
@@ -168,6 +189,14 @@ fn dispatch_request(
             code: -32601,
             message: format!("Unknown method: {}", method),
         }),
+    }
+}
+
+/// Choose the protocol version to advertise in the `initialize` response.
+fn negotiate_protocol_version(client_version: Option<&str>) -> String {
+    match client_version {
+        Some(version) if SUPPORTED_PROTOCOL_VERSIONS.contains(&version) => version.to_string(),
+        _ => DEFAULT_PROTOCOL_VERSION.to_string(),
     }
 }
 
@@ -306,6 +335,7 @@ mod tests {
         let v = parse(handle_line("not json", &mut handler));
         assert_eq!(v["id"], Value::Null);
         assert_eq!(v["error"]["code"], json!(-32700));
+        assert_eq!(v["error"]["message"], json!("Parse error"));
     }
 
     #[test]
@@ -316,6 +346,27 @@ mod tests {
             &mut handler,
         ));
         assert_eq!(v["result"]["serverInfo"]["version"], json!(env!("CARGO_PKG_VERSION")));
+        assert_eq!(v["result"]["protocolVersion"], json!(DEFAULT_PROTOCOL_VERSION));
+    }
+
+    #[test]
+    fn initialize_echoes_supported_client_protocol_version() {
+        let mut handler = TestHandler;
+        let v = parse(handle_line(
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}"#,
+            &mut handler,
+        ));
+        assert_eq!(v["result"]["protocolVersion"], json!("2025-03-26"));
+    }
+
+    #[test]
+    fn initialize_falls_back_for_unsupported_client_protocol_version() {
+        let mut handler = TestHandler;
+        let v = parse(handle_line(
+            r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}"#,
+            &mut handler,
+        ));
+        assert_eq!(v["result"]["protocolVersion"], json!(DEFAULT_PROTOCOL_VERSION));
     }
 
     #[test]
@@ -328,6 +379,14 @@ mod tests {
     fn read_capped_line_reads_normal_line() {
         let mut reader = io::Cursor::new(b"hello\nworld");
         assert_eq!(read_capped_line(&mut reader, 16).unwrap(), Some("hello".to_string()));
+    }
+
+    #[test]
+    fn read_capped_line_preserves_remaining_lines() {
+        let mut reader = io::Cursor::new(b"hello\nworld\n");
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), Some("hello".to_string()));
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), Some("world".to_string()));
+        assert_eq!(read_capped_line(&mut reader, 16).unwrap(), None);
     }
 
     #[test]

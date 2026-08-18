@@ -22,11 +22,13 @@ pub fn generate_index(store: &BareStore) -> Result<CatalogIndex> {
     }
 
     let catalog_digest = store.tree_sha().unwrap_or_else(|_| "unknown".to_string());
+    let catalog_version = store.catalog_version().ok().flatten();
 
     Ok(CatalogIndex {
         schema_version: 1,
         catalog_digest,
         generated_at: Utc::now(),
+        catalog_version,
         skill_count: skills.len(),
         skills,
     })

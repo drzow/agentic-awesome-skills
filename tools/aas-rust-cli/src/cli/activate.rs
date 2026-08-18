@@ -8,7 +8,7 @@ use crate::utils::platform;
 
 /// Activate or deactivate skills by materializing the full skill tree from
 /// the store and linking (or copying) it into agent directories.
-pub fn run(base_dir: &PathBuf, action: &str, skill_ids: &[String], target_names: &[String]) -> Result<()> {
+pub fn run(base_dir: &Path, action: &str, skill_ids: &[String], target_names: &[String]) -> Result<()> {
     let store_path = base_dir.join("store");
     if !store_path.exists() {
         return Err(anyhow!("store not found. Run 'aas init' first."));

@@ -6,7 +6,7 @@ use crate::search;
 use crate::store::bare_repo::BareStore;
 use crate::cache::manifest::CacheManifest as Manifest;
 use crate::utils::path_validation::validate_skill_id;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// MCP server that provides skill search and retrieval tools.
 pub struct McpServer {
@@ -34,7 +34,7 @@ impl crate::mcp::server::McpHandler for McpServer {
 
 impl McpServer {
     /// Create a new MCP server from the given base directory.
-    pub fn new(base_dir: &PathBuf) -> Result<Self, String> {
+    pub fn new(base_dir: &Path) -> Result<Self, String> {
         let store_path = base_dir.join("store");
         if !store_path.exists() {
             return Err("store not found. Run 'aas init' first.".to_string());
@@ -60,7 +60,7 @@ impl McpServer {
             index,
             store,
             cache_manifest,
-            base_dir: base_dir.clone(),
+            base_dir: base_dir.to_path_buf(),
         })
     }
 

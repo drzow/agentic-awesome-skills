@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod cache;
 mod cli;
@@ -134,7 +134,7 @@ mod shellexpand {
     pub fn full(s: &str) -> Result<AllocatedString, ()> {
         if let Some(rest) = s.strip_prefix("~/") {
             if let Some(home) = dirs::home_dir() {
-                return Ok(AllocatedString(format!("{}", home.join(rest).display())));
+                return Ok(AllocatedString(home.join(rest).display().to_string()));
             }
         }
         Err(())
@@ -177,7 +177,7 @@ fn main() -> Result<()> {
             }
             let index = index::reader::load_index(&index_path)?;
             let categories = search::scoring::list_categories(&index);
-            println!("{:<30} {}", "Category", "Count");
+            println!("{:<30} Count", "Category");
             println!("{}", "-".repeat(42));
             for (name, count) in &categories {
                 println!("{:<30} {}", name, count);
@@ -239,7 +239,7 @@ fn parse_targets(targets: &str) -> Vec<String> {
     targets.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect()
 }
 
-fn mcp_server(base_dir: &PathBuf) -> Result<()> {
+fn mcp_server(base_dir: &Path) -> Result<()> {
     use crate::mcp::tools::McpServer;
 
     let server = McpServer::new(base_dir)

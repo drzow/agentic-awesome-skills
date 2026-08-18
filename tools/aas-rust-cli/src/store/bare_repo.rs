@@ -84,7 +84,7 @@ impl BareStore {
         Repository::init_bare(store_path)?;
         let repo = Repository::open(store_path)?;
         let mut origin = repo.remote_anonymous(repo_url)?;
-        origin.fetch(&mut ["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
             .map_err(|e| anyhow!("clone failed: {}", e))?;
 
         // After fetching a bare repo, HEAD may not point to any existing branch.
@@ -166,7 +166,7 @@ impl BareStore {
         fetch_opts.remote_callbacks(callbacks);
 
         let mut origin = repo.find_remote("origin")?;
-        origin.fetch(&mut ["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
             .map_err(|e| anyhow!("fetch failed: {}", e))?;
 
         // Return the new HEAD SHA.
@@ -290,7 +290,7 @@ impl BareStore {
         let mut current_tree = tree;
 
         for (i, component) in components.iter().enumerate() {
-            let entry_id = current_tree.get_name(*component)
+            let entry_id = current_tree.get_name(component)
                 .map(|e| e.id())
                 .ok_or_else(|| anyhow!("path component not found: {}", component))?;
 
@@ -462,9 +462,9 @@ impl BareStore {
     pub fn head_sha(&self) -> Result<String> {
         let repo = Repository::open_bare(&self.store_path)?;
         let head = repo.head()?;
-        Ok(head.target()
+        head.target()
             .map(|oid| oid.to_string())
-            .ok_or_else(|| anyhow!("no HEAD"))?)
+            .ok_or_else(|| anyhow!("no HEAD"))
     }
 
     /// Get the root tree SHA for catalog digest.
@@ -474,6 +474,43 @@ impl BareStore {
         let commit = repo.find_commit(head.target().unwrap())?;
         let tree = commit.tree()?;
         Ok(tree.id().to_string())
+    }
+
+    /// Read the catalog version from `.claude-plugin/plugin.json` at HEAD.
+    pub fn catalog_version(&self) -> Result<Option<String>> {
+        let repo = Repository::open_bare(&self.store_path)?;
+        let head = repo.head()?;
+        let head_oid = head
+            .target()
+            .ok_or_else(|| anyhow!("store has no HEAD commit"))?;
+        let commit = repo.find_commit(head_oid)?;
+        let tree = commit.tree()?;
+
+        let plugin_dir_entry = match tree.get_name(".claude-plugin") {
+            Some(entry) => entry,
+            None => return Ok(None),
+        };
+        let plugin_dir = repo
+            .find_tree(plugin_dir_entry.id())
+            .map_err(|_| anyhow!(".claude-plugin is not a tree"))?;
+
+        let plugin_json_entry = match plugin_dir.get_name("plugin.json") {
+            Some(entry) => entry,
+            None => return Ok(None),
+        };
+        let blob = repo
+            .find_blob(plugin_json_entry.id())
+            .map_err(|_| anyhow!("plugin.json is not a blob"))?;
+        let content = std::str::from_utf8(blob.content())
+            .map_err(|_| anyhow!("plugin.json is not valid UTF-8"))?;
+        let value: serde_json::Value =
+            serde_json::from_str(content).map_err(|e| anyhow!("failed to parse plugin.json: {}", e))?;
+
+        Ok(value
+            .get("version")
+            .and_then(|v| v.as_str())
+            .filter(|v| !v.is_empty())
+            .map(|v| v.to_string()))
     }
 
     /// Get the number of refs (branches) in the store.
@@ -494,8 +531,11 @@ impl BareStore {
 /// Returns `true` if the `AAS_SKIP_TLS_VERIFY` environment variable is set to
 /// a truthy value (case-insensitive): `1`, `true`, `yes`, or `on`.
 pub fn should_skip_tls() -> bool {
-    std::env::var("AAS_SKIP_TLS_VERIFY")
-        .ok()
+    skip_tls_from_value(std::env::var("AAS_SKIP_TLS_VERIFY").ok().as_deref())
+}
+
+fn skip_tls_from_value(value: Option<&str>) -> bool {
+    value
         .map(|v| matches!(v.to_lowercase().as_str(), "1" | "true" | "yes" | "on"))
         .unwrap_or(false)
 }
@@ -523,36 +563,34 @@ impl RepositoryExt for Repository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
     fn test_should_skip_tls_defaults_false() {
-        // Ensure the env var is unset.
-        let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", None);
-        assert!(!should_skip_tls());
+        assert!(!skip_tls_from_value(None));
     }
 
     #[test]
     fn test_should_skip_tls_various_truthy_values() {
         for val in &["1", "true", "yes", "on"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(should_skip_tls(), "expected '{}' to be truthy", val);
+            assert!(skip_tls_from_value(Some(val)), "expected '{}' to be truthy", val);
         }
     }
 
     #[test]
     fn test_should_skip_tls_various_falsy_values() {
         for val in &["0", "false", "no", "off", "random"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(!should_skip_tls(), "expected '{}' to be falsy", val);
+            assert!(!skip_tls_from_value(Some(val)), "expected '{}' to be falsy", val);
         }
     }
 
     #[test]
     fn test_should_skip_tls_case_insensitive() {
         for val in &["TRUE", "True", "YES", "Yes", "ON", "On"] {
-            let _guard = TestEnvGuard::new("AAS_SKIP_TLS_VERIFY", Some(val));
-            assert!(should_skip_tls(), "expected '{}' (case-insensitive) to be truthy", val);
+            assert!(
+                skip_tls_from_value(Some(val)),
+                "expected '{}' (case-insensitive) to be truthy",
+                val
+            );
         }
     }
 
@@ -644,28 +682,4 @@ mod tests {
         assert!(store.extract_skill("../evil", &out).is_err());
     }
 
-    struct TestEnvGuard {
-        key: String,
-        prev: Option<String>,
-    }
-
-    impl TestEnvGuard {
-        fn new(key: &str, value: Option<&str>) -> Self {
-            let prev = env::var(key).ok();
-            match value {
-                Some(v) => env::set_var(key, v),
-                None => { env::remove_var(key); }
-            }
-            Self { key: key.to_string(), prev }
-        }
-    }
-
-    impl Drop for TestEnvGuard {
-        fn drop(&mut self) {
-            match &self.prev {
-                Some(v) => env::set_var(&self.key, v),
-                None => env::remove_var(&self.key),
-            }
-        }
-    }
 }

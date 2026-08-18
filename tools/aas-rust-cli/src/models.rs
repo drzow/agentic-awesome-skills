@@ -23,6 +23,8 @@ pub struct CatalogIndex {
     pub catalog_digest: String,
     #[serde(rename = "generatedAt")]
     pub generated_at: chrono::DateTime<chrono::Utc>,
+    #[serde(rename = "catalogVersion", default)]
+    pub catalog_version: Option<String>,
     pub skill_count: usize,
     pub skills: Vec<SkillEntry>,
 }

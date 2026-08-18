@@ -42,10 +42,7 @@ pub fn validate_skill_id(skill_id: &str) -> Result<(), String> {
 /// Check if a path is contained within a parent directory.
 #[allow(dead_code)] // Public API; used in tests
 pub fn is_within(parent: &Path, child: &Path) -> bool {
-    match child.strip_prefix(parent) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    child.strip_prefix(parent).is_ok()
 }
 
 #[cfg(test)]
