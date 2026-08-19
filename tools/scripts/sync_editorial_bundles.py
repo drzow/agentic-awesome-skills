@@ -1027,10 +1027,28 @@ def _assert_plugin_metadata_layout(
 def _bundle_asset_sources(root: Path, bundle: dict[str, Any]) -> dict[str, Path]:
     if bundle["id"] != FLAGSHIP_BUNDLE_ID:
         return {}
-    return {
-        relative_path: root / source_path
-        for relative_path, source_path in FLAGSHIP_ASSET_SOURCES.items()
-    }
+
+    asset_sources = {}
+    resolved_root = root.resolve()
+    for relative_path, configured_source in FLAGSHIP_ASSET_SOURCES.items():
+        source_path = root / configured_source
+        current_path = root
+        for part in configured_source.parts:
+            current_path /= part
+            if current_path.is_symlink():
+                raise ValueError(
+                    f"Flagship plugin source asset path must not contain a symlink: {source_path}"
+                )
+        if not source_path.is_file():
+            raise ValueError(f"Flagship plugin source asset is missing: {source_path}")
+        try:
+            source_path.resolve(strict=True).relative_to(resolved_root)
+        except ValueError as exc:
+            raise ValueError(
+                f"Flagship plugin source asset must stay within the repository: {source_path}"
+            ) from exc
+        asset_sources[relative_path] = source_path
+    return asset_sources
 
 
 def _assert_bundle_assets(
@@ -1040,8 +1058,8 @@ def _assert_bundle_assets(
 ) -> None:
     for relative_path, source_path in asset_sources.items():
         destination_path = plugin_root / relative_path
-        if not source_path.is_file():
-            raise ValueError(f"{label} source asset is missing: {source_path}")
+        if source_path.is_symlink() or not source_path.is_file():
+            raise ValueError(f"{label} source asset is missing or unsafe: {source_path}")
         if destination_path.is_symlink() or not destination_path.is_file():
             raise ValueError(f"{label} asset is missing or unsafe: {relative_path}")
         if destination_path.read_bytes() != source_path.read_bytes():
@@ -1324,8 +1342,8 @@ def _sync_bundle_plugin_directory(
             )
 
         for relative_path, source_path in _bundle_asset_sources(root, bundle).items():
-            if not source_path.is_file():
-                raise ValueError(f"Flagship plugin source asset is missing: {source_path}")
+            if source_path.is_symlink() or not source_path.is_file():
+                raise ValueError(f"Flagship plugin source asset is missing or unsafe: {source_path}")
             destination_path = staging_root / relative_path
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source_path, destination_path)
