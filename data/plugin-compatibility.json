@@ -564,6 +564,25 @@
       "runtime_files": []
     },
     {
+      "id": "agent-evaluation-reporting",
+      "path": "skills/agent-evaluation-reporting",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
       "id": "agent-framework-azure-ai-py",
       "path": "skills/agent-framework-azure-ai-py",
       "targets": {
@@ -699,6 +718,63 @@
     {
       "id": "agent-orchestrator",
       "path": "skills/agent-orchestrator",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "agent-qa-authoring",
+      "path": "skills/agent-qa-authoring",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "agent-qa-debug-fix",
+      "path": "skills/agent-qa-debug-fix",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "agent-qa-result-triage",
+      "path": "skills/agent-qa-result-triage",
       "targets": {
         "codex": "supported",
         "claude": "supported"
@@ -1937,6 +2013,25 @@
       "runtime_files": []
     },
     {
+      "id": "anti-ui-slop",
+      "path": "skills/anti-ui-slop",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
       "id": "antigravity-agent-manager",
       "path": "skills/antigravity-agent-manager",
       "targets": {
@@ -3066,6 +3161,25 @@
     {
       "id": "async-python-patterns",
       "path": "skills/async-python-patterns",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "atlas-cloud-media",
+      "path": "skills/atlas-cloud-media",
       "targets": {
         "codex": "supported",
         "claude": "supported"
@@ -9180,6 +9294,25 @@
       "runtime_files": []
     },
     {
+      "id": "compile-knowledge",
+      "path": "skills/compile-knowledge",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
       "id": "complexity-cuts",
       "path": "skills/complexity-cuts",
       "targets": {
@@ -10180,6 +10313,25 @@
     {
       "id": "cron-doctor",
       "path": "skills/cron-doctor",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "cross-platform-contract-propagation-audit",
+      "path": "skills/cross-platform-contract-propagation-audit",
       "targets": {
         "codex": "supported",
         "claude": "supported"
@@ -13663,6 +13815,25 @@
     {
       "id": "dropbox-automation",
       "path": "skills/dropbox-automation",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "dsh-deepread",
+      "path": "skills/dsh-deepread",
       "targets": {
         "codex": "supported",
         "claude": "supported"
@@ -21203,6 +21374,25 @@
     {
       "id": "linux-troubleshooting",
       "path": "skills/linux-troubleshooting",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "liuguang-banlan-ui",
+      "path": "skills/liuguang-banlan-ui",
       "targets": {
         "codex": "supported",
         "claude": "supported"
@@ -36154,6 +36344,25 @@
       "runtime_files": []
     },
     {
+      "id": "us-property-data",
+      "path": "skills/us-property-data",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
+      },
+      "runtime_files": []
+    },
+    {
       "id": "usage-based-pricing",
       "path": "skills/usage-based-pricing",
       "targets": {
@@ -36232,6 +36441,25 @@
         "claude": [
           "absolute_host_path"
         ]
+      },
+      "runtime_files": []
+    },
+    {
+      "id": "using-lwc",
+      "path": "skills/using-lwc",
+      "targets": {
+        "codex": "supported",
+        "claude": "supported"
+      },
+      "setup": {
+        "type": "none",
+        "summary": "",
+        "docs": null
+      },
+      "reasons": [],
+      "blocked_reasons": {
+        "codex": [],
+        "claude": []
       },
       "runtime_files": []
     },
@@ -38584,10 +38812,10 @@
     }
   ],
   "summary": {
-    "total_skills": 2007,
+    "total_skills": 2019,
     "supported": {
-      "codex": 1929,
-      "claude": 1950
+      "codex": 1941,
+      "claude": 1962
     },
     "blocked": {
       "codex": 78,

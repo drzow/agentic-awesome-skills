@@ -9,6 +9,303 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [15.15.0] - 2026-08-18 - "Evidence, Durable Context, and UI Contracts"
+
+> Added six focused skills for deep reading, durable agent context, measurable
+> UI work, evaluation reporting, and cross-platform contract audits, while
+> hardening exact-release installation and contributor-credit workflows. The
+> published catalog contains 2,019 skills.
+
+This release helps Claude Code, Cursor, Codex CLI, Gemini CLI, Antigravity, and
+related AI coding assistants keep claims attached to evidence, preserve verified
+project knowledge across sessions, evaluate agent outcomes without denominator
+drift, and carry product contracts consistently from storage to clients.
+
+Start here:
+
+- Install: `npx agentic-awesome-skills`
+- [`dsh-deepread`](skills/dsh-deepread/) for evidence-first document analysis.
+- [`using-lwc`](skills/using-lwc/) for durable, source-grounded project memory.
+- [`anti-ui-slop`](skills/anti-ui-slop/) for product-specific UI contracts and a
+  hard finish gate.
+- [Choose your tool](https://github.com/sickn33/agentic-awesome-skills#choose-your-tool)
+- [Bundles](https://github.com/sickn33/agentic-awesome-skills/blob/main/docs/users/bundles.md)
+
+### Added
+
+- Added [`anti-ui-slop`](skills/anti-ui-slop/) for grounding web and iOS work in
+  real interface references, explicit product contracts, required interaction
+  states, and a finish gate that rejects generic coding-agent defaults
+  ([#1166](https://github.com/sickn33/agentic-awesome-skills/pull/1166)).
+- Added [`liuguang-banlan-ui`](skills/liuguang-banlan-ui/) for two parameterized
+  iridescent UI modes with OKLCH authoring, deterministic WebGL and CSS fallback,
+  reduced-motion handling, screenshot QA, and measurable color reports
+  ([#1154](https://github.com/sickn33/agentic-awesome-skills/pull/1154)).
+- Added [`using-lwc`](skills/using-lwc/) for durable, source-grounded agent memory
+  across Wiki document and CodeGraph planes, with explicit scope, installation,
+  initialization, and write-consent boundaries
+  ([#1152](https://github.com/sickn33/agentic-awesome-skills/pull/1152)).
+- Added [`dsh-deepread`](skills/dsh-deepread/) for evidence-first reading of
+  articles, books, PDFs, web pages, and document sets through claim ledgers,
+  argument analysis, knowledge maps, and Feynman checks
+  ([#1174](https://github.com/sickn33/agentic-awesome-skills/pull/1174)).
+- Added [`agent-evaluation-reporting`](skills/agent-evaluation-reporting/) for
+  keeping autonomous, assisted, failed, timed-out, and invalid evaluation
+  outcomes distinct, with explicit denominators, uncertainty, and readiness
+  gates ([#1177](https://github.com/sickn33/agentic-awesome-skills/pull/1177)).
+- Added
+  [`cross-platform-contract-propagation-audit`](skills/cross-platform-contract-propagation-audit/)
+  for read-only tracing of fields, enums, flags, and API contracts across
+  storage, services, clients, analytics, rollout controls, and tests
+  ([#1178](https://github.com/sickn33/agentic-awesome-skills/pull/1178)).
+
+### Changed
+
+- Updated the exact-release installer to accept npm 12's valid single-element
+  JSON-array response for `npm view --json`, while rejecting empty or ambiguous
+  multi-item results and preserving fail-closed `gitHead` verification
+  ([#1167](https://github.com/sickn33/agentic-awesome-skills/pull/1167)).
+- Hardened zero-diff contributor-credit intake so an authoritative empty raw Git
+  diff can proceed without weakening the rejection of missing or non-empty
+  evidence
+  ([#1171](https://github.com/sickn33/agentic-awesome-skills/pull/1171),
+  [#1172](https://github.com/sickn33/agentic-awesome-skills/pull/1172),
+  [#1173](https://github.com/sickn33/agentic-awesome-skills/pull/1173)).
+- Regenerated the canonical catalog, offline AAS Core data, web assets,
+  marketplaces, editorial bundles, compatibility reports, and Codex/Claude
+  plugin distributions for 2,019 skills.
+
+### Security
+
+- Preserved exact npm package-to-Git identity checks across npm 12 output-shape
+  changes; missing, empty, changed, or ambiguous registry identity remains a
+  hard installer failure.
+- Repaired the protected maintainer intake for `liuguang-banlan-ui` and
+  `using-lwc` with explicit provenance, risk labels, consent gates, pinned LWC
+  bootstrap identities, reduced-motion behavior, renderer fallback, and
+  regression coverage
+  ([#1169](https://github.com/sickn33/agentic-awesome-skills/pull/1169)).
+- Kept optional UIZZE preview inspection behind minimized-payload review and
+  explicit network approval, and kept LWC installation, global initialization,
+  and durable writes behind current user authorization.
+
+### Who should care
+
+- Researchers, students, and analysts who need long-form reading outputs whose
+  claims remain linked to inspectable source evidence.
+- Coding teams that need verified project decisions and code relationships to
+  survive across agent sessions without silently widening workspace authority.
+- UI teams that want either a strict anti-generic finish gate or a measurable,
+  accessible iridescent rendering workbench.
+- Agent-evaluation owners and cross-platform product teams that need honest
+  denominators, explicit readiness gates, and evidence for every contract edge.
+- Maintainers and npm 12 users who depend on exact-release identity and
+  contributor-credit workflows that fail closed on ambiguous evidence.
+
+### Validation
+
+- Passed repository validation, reference validation, documentation-security
+  checks, warning-budget enforcement, the complete 111-group repository test
+  suite, plugin-compatibility and bundle checks, web-app install/build/prerender,
+  and the npm package dry run on the protected release base.
+- Reviewed all six added skills and their bundled files for semantics, safety,
+  provenance, declared risk, limitations, consent boundaries, and relevant
+  regression coverage.
+
+### Limitations
+
+- `dsh-deepread` requires readable source material and cannot recover or invent
+  content that the host agent could not retrieve.
+- `using-lwc` documents LWC workflows but does not bundle an initialized Wiki,
+  trusted project scope, or permission to install software or write memory.
+- The UI skills do not guarantee visual quality automatically: external preview
+  use needs approval, screenshot claims need actual image inspection, and WebGL
+  environments still require the documented fallback and accessibility checks.
+- Evaluation reports and contract audits expose evidence gaps; they do not make
+  missing data comparable or implement the repairs they identify.
+
+### Credits
+
+- **[@samuelbushi](https://github.com/samuelbushi)** and the official
+  **[uizze/uizze](https://github.com/uizze/uizze)** source for
+  [`anti-ui-slop`](skills/anti-ui-slop/) in
+  [PR #1166](https://github.com/sickn33/agentic-awesome-skills/pull/1166).
+- **[@3516027002att-ui](https://github.com/3516027002att-ui)** for
+  [`liuguang-banlan-ui`](skills/liuguang-banlan-ui/) in
+  [PR #1154](https://github.com/sickn33/agentic-awesome-skills/pull/1154).
+- **[@JanYork](https://github.com/JanYork)** and
+  **[JanYork/using-lwc](https://github.com/JanYork/using-lwc)** for
+  [`using-lwc`](skills/using-lwc/) in
+  [PR #1152](https://github.com/sickn33/agentic-awesome-skills/pull/1152).
+- **[@xiehuan123](https://github.com/xiehuan123)** and
+  **[xiehuan123/dsh-deepread](https://github.com/xiehuan123/dsh-deepread)** for
+  [`dsh-deepread`](skills/dsh-deepread/) in
+  [PR #1174](https://github.com/sickn33/agentic-awesome-skills/pull/1174).
+- **[@Whxuan0701](https://github.com/Whxuan0701)** for
+  [`agent-evaluation-reporting`](skills/agent-evaluation-reporting/) and
+  [`cross-platform-contract-propagation-audit`](skills/cross-platform-contract-propagation-audit/)
+  in [PR #1177](https://github.com/sickn33/agentic-awesome-skills/pull/1177)
+  and [PR #1178](https://github.com/sickn33/agentic-awesome-skills/pull/1178).
+- **[@rjvkn](https://github.com/rjvkn)** for the npm 12 installer identity fix
+  in [PR #1167](https://github.com/sickn33/agentic-awesome-skills/pull/1167).
+
+## [15.14.0] - 2026-08-16 - "Agent QA and Durable Knowledge"
+
+> Added an evidence-first Agent QA workflow and a durable knowledge-compilation skill, while refreshing multilingual video guidance and the catalog's dependency baseline. The published catalog contains 2,013 skills.
+
+This installable library update gives Claude Code, Cursor, Codex CLI, Gemini CLI,
+Antigravity, and related AI coding assistants clearer paths for authoring tests,
+triaging failures, making scoped repairs, and preserving hard-won findings
+across sessions.
+
+Start here:
+
+- Install: `npx agentic-awesome-skills`
+- [Choose your tool](https://github.com/sickn33/agentic-awesome-skills#choose-your-tool)
+- [Best skills by tool](https://github.com/sickn33/agentic-awesome-skills#best-skills-by-tool)
+- [Bundles](https://github.com/sickn33/agentic-awesome-skills/blob/main/docs/users/bundles.md)
+- [Workflows](https://github.com/sickn33/agentic-awesome-skills/blob/main/docs/users/workflows.md)
+
+### Added
+
+- Added [`agent-qa-authoring`](skills/agent-qa-authoring/) for creating,
+  validating, and running schema-safe Agent QA tests, suites, and hooks while
+  preserving canonical IDs and explicit approval boundaries.
+- Added [`agent-qa-result-triage`](skills/agent-qa-result-triage/) for classifying
+  failed Agent QA runs from recorded steps, artifacts, and logs with a fixed
+  category, confidence, likely ownership, and an evidence-backed next action.
+- Added [`agent-qa-debug-fix`](skills/agent-qa-debug-fix/) for making the smallest
+  justified repair after triage and verifying it narrowly without rewriting a
+  test merely to hide a product or infrastructure defect.
+- Added [`compile-knowledge`](skills/compile-knowledge/) for preserving durable,
+  non-obvious findings as atomic, interlinked Markdown notes with a maintained
+  index instead of accumulating routine or duplicate memory.
+
+### Changed
+
+- Expanded [`riffkit`](skills/riffkit/) guidance from English and Spanish to all
+  nine currently supported native output languages: English, Spanish,
+  Portuguese, Indonesian, German, French, Italian, Japanese, and Simplified
+  Chinese ([#1155](https://github.com/sickn33/agentic-awesome-skills/pull/1155)).
+- Refreshed the [`cohesivity`](skills/cohesivity/) description to present its
+  headless hosting, database, storage, model, and third-party API surface more
+  clearly while preserving its existing consent and safety boundaries
+  ([#1157](https://github.com/sickn33/agentic-awesome-skills/pull/1157)).
+- Regenerated the canonical catalog, offline AAS Core data, web assets,
+  marketplaces, editorial bundles, and Codex/Claude plugin distributions for
+  2,013 skills.
+
+### Security
+
+- Updated the web app's transitive `nanoid` dependency from `3.3.17` to
+  `3.3.18`, resolving the zero-length custom-generator denial-of-service
+  advisory without changing the direct dependency set
+  ([#1150](https://github.com/sickn33/agentic-awesome-skills/pull/1150)).
+- Kept Agent QA authoring and repair operations behind explicit workspace,
+  scope, side-effect, and production-action approval boundaries; triage remains
+  evidence-first and read-only until a separate repair step is chosen.
+- Kept durable knowledge stores free of secrets and personal identifiers, and
+  confined writes and deletions to the user-approved store.
+
+### Who should care
+
+- QA and product teams using Agent QA with Claude Code, Cursor, Codex CLI, or
+  Gemini CLI who need a reviewable path from test definition to failure triage
+  and minimal repair.
+- Researchers and agents that repeatedly rediscover the same project facts and
+  need a deliberately selective, interlinked memory store.
+- Riffkit users producing native-language short-form video beyond English and
+  Spanish.
+- Maintainers and web-catalog users who need the patched `nanoid` dependency and
+  a version-aligned 2,013-skill distribution.
+
+### Validation
+
+- Passed repository validation, reference validation, documentation-security
+  checks, warning-budget enforcement, the complete 110-group repository test
+  suite, plugin-compatibility and bundle checks, web-app install/build/prerender,
+  and the npm package dry run on the protected release base.
+- Reviewed the Agent QA schemas, bundled references, fixed triage categories,
+  mutation approvals, provenance, risk labels, and license declarations; also
+  reviewed `compile-knowledge` store boundaries, provenance, and limitations.
+
+### Limitations
+
+- The Agent QA skills document Agent QA's MCP and CLI contracts; they do not
+  bundle the Agent QA service, credentials, a configured workspace, or a test
+  environment. Mutating or production-facing runs still require explicit user
+  approval.
+- `compile-knowledge` requires a user-approved Markdown store and disciplined
+  curation; it intentionally skips routine, derivable, secret, personal, and
+  conversation-only facts.
+- Riffkit remains a hosted, metered service that requires an account session and
+  explicit approval before billable rendering.
+
+### Credits
+
+- **[@pranshuchittora](https://github.com/pranshuchittora)** and the official
+  **[vostride/agent-qa](https://github.com/vostride/agent-qa)** source for the
+  three Agent QA skills in [PR #1158](https://github.com/sickn33/agentic-awesome-skills/pull/1158).
+- **[@lodar](https://github.com/lodar)** and
+  **[5dive-ai/skills](https://github.com/5dive-ai/skills)** for
+  [`compile-knowledge`](skills/compile-knowledge/) in
+  [PR #1159](https://github.com/sickn33/agentic-awesome-skills/pull/1159).
+- **[@owengu-ai](https://github.com/owengu-ai)** for the nine-language
+  [`riffkit`](skills/riffkit/) refresh in
+  [PR #1155](https://github.com/sickn33/agentic-awesome-skills/pull/1155).
+- **[@shouryamaanjain](https://github.com/shouryamaanjain)** for the
+  [`cohesivity`](skills/cohesivity/) description refresh in
+  [PR #1157](https://github.com/sickn33/agentic-awesome-skills/pull/1157).
+
+## [15.13.0] - 2026-08-12 - "Release Integrity, Governed Media, and Property Data"
+
+> Added two focused external-service workflows and tightened the boundaries around exact-release installation, flagship bundle publication, and provider-free demos. The published catalog contains 2,009 skills.
+
+Start here:
+
+- [`atlas-cloud-media`](skills/atlas-cloud-media/) for Atlas Cloud image and video generation.
+- [`us-property-data`](skills/us-property-data/) for read-only U.S. residential property lookups.
+- [AAS Core setup](docs/users/aas-core.md) for installing and pinning the exact published runtime.
+
+### Added
+
+- Added [`atlas-cloud-media`](skills/atlas-cloud-media/) for Atlas Cloud's asynchronous image and video API: schema-first model discovery, explicit approval before paid requests, bounded polling, credential-safe output download, and media validation. It documents operating instructions only; it does not bundle an SDK, worker, queue, or runtime.
+- Added [`us-property-data`](skills/us-property-data/) for read-only U.S. residential property data through `https://api.zillapi.com`, including valuation, listing, tax-history, school, and price-history lookups. It uses `ZILLAPI_KEY` as a bearer token, treats missing data as missing rather than zero, and keeps property identifiers and third-party estimates within explicit privacy and freshness limits.
+
+### Changed
+
+- Bound default and `--release` installer clones to the `gitHead` published with the exact npm package version. The installer now verifies the npm identity and cloned Git HEAD before reading or copying skill content; explicit `--tag` installs remain a mutable-ref escape hatch and warn accordingly ([#1132](https://github.com/sickn33/agentic-awesome-skills/pull/1132)).
+- Updated the provider-free [`unified-ai-gateway`](skills/unified-ai-gateway/) demo path to use the reviewed, digest-pinned image inspection and activation procedure instead of a mutable upstream README command ([#1130](https://github.com/sickn33/agentic-awesome-skills/pull/1130)).
+- Refreshed the web-app runtime dependencies to `react`/`react-dom` `19.2.8` and `@fontsource/jetbrains-mono`/`@fontsource/outfit` `5.3.0`.
+- Regenerated the canonical catalog, offline AAS Core data, web assets, marketplaces, editorial bundles, and Codex/Claude plugin distributions for the 2,009-skill release.
+
+### Security
+
+- Rejected symlinks in flagship bundle source paths, required resolved sources to remain under the repository root, and added regression coverage so unsafe sources cannot be copied into distributable plugin assets ([#1129](https://github.com/sickn33/agentic-awesome-skills/pull/1129)).
+- Kept `ATLASCLOUD_API_KEY` and `ZILLAPI_KEY` out of prompts, logs, and unrelated download requests; required informed approval before billable Atlas Cloud generation; and bounded external polling, output handling, and property-data requests.
+
+### Who should care
+
+- Users who need governed image or video generation with a visible paid-request boundary and a bounded asynchronous workflow.
+- Developers who need current U.S. property facts from a live API rather than values synthesized from model memory or retired Zillow ZWSID examples.
+- Maintainers and package consumers who need an exact npm release identity before installing content or publishing plugin bundles.
+
+### Validation
+
+- Passed the release preflight: repository validation, reference validation, documentation-security checks, the full repository test suite, plugin-compatibility and bundle checks, web-app install/build/prerender, and the npm package dry run.
+- Published `agentic-awesome-skills@15.13.0` with `gitHead` `b39fc724bcb981107fb73aedcdd190cd76df2016`; protected `main` CI, CodeQL, npm publication, and the release-only Pages deployment all passed.
+- Verified the live catalog, `llms.txt`, and legacy redirect bridge against the generated release output. Updated the existing Codex AAS host to the content-addressed `15.13.0` runtime with a backup, then verified a real MCP `initialize` and `tools/list` handshake.
+
+### Limitations
+
+- Atlas Cloud generation requires an account, `ATLASCLOUD_API_KEY`, available credits, and explicit approval for each paid submission; this contribution does not provide an SDK or guarantee provider pricing, quotas, or API stability.
+- U.S. property lookups require a Zillapi account and available credits; its pricing, quota, service availability, and API schema can change independently of this repository. Property addresses and Zillow URLs may be sensitive.
+
+### Credits
+
+- **[@binyangzhu000-sudo](https://github.com/binyangzhu000-sudo)** for [`atlas-cloud-media`](skills/atlas-cloud-media/) in [PR #1144](https://github.com/sickn33/agentic-awesome-skills/pull/1144). The skill declares `source: self`.
+- **[@zillapi](https://github.com/zillapi)** for [`us-property-data`](skills/us-property-data/) in [PR #1142](https://github.com/sickn33/agentic-awesome-skills/pull/1142), adapted from **[ZeroPointRepo/zillow-skills](https://github.com/ZeroPointRepo/zillow-skills)** under the declared MIT-0 provenance.
+
 ## [15.12.0] - 2026-08-09 - "Catalog Discovery and Safer Context Skills"
 
 > Upgraded the public catalog into a practical discovery dashboard, added two focused research and planning skills, and repaired unsafe or malformed context-management guidance.
