@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use git2::{CertificateCheckStatus, FetchOptions, RemoteCallbacks, Repository, Cred};
+use git2::Repository;
 use std::path::Path;
 
 /// A bare-git-backed skill store.
@@ -31,17 +31,23 @@ impl BareStore {
     ) -> Result<Self> {
         println!("Cloning {} into {:?}", repo_url, store_path);
 
-        let remote_callbacks = remote_callbacks_for(skip_tls_verify);
-
-        let mut fetch_opts = FetchOptions::new();
-        fetch_opts.remote_callbacks(remote_callbacks);
-
-        // Perform initial clone into the store path.
+        // Create an empty bare repository and persist the origin remote
+        // (local git2 operations).
         Repository::init_bare(store_path)?;
-        let repo = Repository::open(store_path)?;
-        let mut origin = repo.remote("origin", repo_url)?;
-        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        {
+            let repo = Repository::open(store_path)?;
+            repo.remote("origin", repo_url)?;
+        }
+
+        // Perform the initial network fetch using system git, which delegates
+        // SSH to OpenSSH (honouring the running ssh-agent, ~/.ssh/config and
+        // known_hosts) instead of the embedded libgit2/libssh2 stack.
+        git_fetch(store_path, &["+refs/heads/*:refs/heads/*"], skip_tls_verify)
             .map_err(|e| anyhow!("clone failed: {}", e))?;
+
+        // Re-open so libgit2 reads the refs written by the external fetch
+        // (the pre-fetch handle may hold a stale refdb cache).
+        let repo = Repository::open(store_path)?;
 
         // After fetching a bare repo, HEAD may not point to any existing branch.
         // Discover the default branch and set HEAD as a symbolic ref to it.
@@ -66,18 +72,15 @@ impl BareStore {
 
     /// Fetch latest from origin, returning the new HEAD SHA.
     pub fn fetch(&self, skip_tls_verify: bool) -> Result<String> {
-        let repo = Repository::open_bare(&self.store_path)?;
+        // Validate the store is a bare repository.
+        Repository::open_bare(&self.store_path)?;
 
-        let callbacks = remote_callbacks_for(skip_tls_verify);
-
-        let mut fetch_opts = FetchOptions::new();
-        fetch_opts.remote_callbacks(callbacks);
-
-        let mut origin = repo.find_remote("origin")?;
-        origin.fetch(&["+refs/heads/*:refs/heads/*"], Some(&mut fetch_opts), None)
+        // Perform the network fetch using system git (OpenSSH/agent aware).
+        git_fetch(Path::new(&self.store_path), &["+refs/heads/*:refs/heads/*"], skip_tls_verify)
             .map_err(|e| anyhow!("fetch failed: {}", e))?;
 
-        // Return the new HEAD SHA.
+        // Re-open to read the updated HEAD.
+        let repo = Repository::open_bare(&self.store_path)?;
         let head = repo.head()?;
         Ok(head.target().ok_or_else(|| anyhow!("no HEAD after fetch"))?.to_string())
     }
@@ -445,59 +448,46 @@ impl BareStore {
     }
 }
 
-/// Build the git2 callbacks used for network fetches.
-fn remote_callbacks_for(skip_tls_verify: bool) -> RemoteCallbacks<'static> {
-    if skip_tls_verify {
-        eprintln!(
-            "WARNING: certificate verification is DISABLED (both HTTPS TLS and SSH hostkey)."
-        );
+/// Run a network `git fetch` using the system git binary.
+///
+/// System git delegates SSH to OpenSSH, which honours the running ssh-agent,
+/// `~/.ssh/config` and `known_hosts` — behaviour the embedded libgit2/libssh2
+/// stack does not reproduce reliably (agent auth could hang for minutes or
+/// fail outright). Local object reads still use git2.
+///
+/// `skip_tls_verify` maps to `GIT_SSL_NO_VERIFY` (HTTPS) and a permissive
+/// `GIT_SSH_COMMAND` (SSH hostkey) so internal registries with self-signed
+/// material can be fetched only when explicitly requested.
+fn git_fetch(store_path: &Path, refspecs: &[&str], skip_tls_verify: bool) -> Result<()> {
+    let mut cmd = std::process::Command::new("git");
+    cmd.arg("-C").arg(store_path);
+    cmd.arg("fetch").arg("origin");
+    for refspec in refspecs {
+        cmd.arg(refspec);
     }
 
-    let mut callbacks = RemoteCallbacks::new();
+    if skip_tls_verify {
+        eprintln!(
+            "WARNING: certificate verification is DISABLED (HTTPS TLS and SSH hostkey)."
+        );
+        cmd.env("GIT_SSL_NO_VERIFY", "1");
+        cmd.env("GIT_SSH_COMMAND", "ssh -o StrictHostKeyChecking=no");
+    }
 
-    callbacks.certificate_check(move |_cert, url| {
-        if skip_tls_verify {
-            return Ok(CertificateCheckStatus::CertificateOk);
-        }
-        println!("Certificate check for {}: skipping (use native TLS in production)", url);
-        Ok(CertificateCheckStatus::CertificatePassthrough)
-    });
+    let output = cmd
+        .output()
+        .map_err(|e| anyhow!("failed to run system git (is it installed?): {}", e))?;
 
-    // SSH credential callback with explicit fallback chain.
-    // Attempt order:
-    // 1. `ssh-agent` — uses any keys loaded in the running agent.
-    // 2. Filesystem keys — tries ~/.ssh/id_rsa, id_ed25519, id_ecdsa.
-    // 3. Default (Cred::default()) — falls back to git2's default
-    //    credential resolution, which may ask the user interactively or
-    //    delegate to an external helper (e.g. OS keychain, gpg-agent).
-    callbacks.credentials(|_url, username_from_url, _allowed| {
-        let user = username_from_url.unwrap_or("git");
-        if let Ok(builder) = Cred::ssh_key_from_agent(user) {
-            return Ok(builder);
-        }
-        let home = dirs::home_dir().map(|h| h.to_path_buf()).unwrap_or_default();
-        for key_path in [
-            home.join(".ssh").join("id_rsa"),
-            home.join(".ssh").join("id_ed25519"),
-            home.join(".ssh").join("id_ecdsa"),
-        ] {
-            if key_path.exists() {
-                if let Ok(builder) = Cred::ssh_key_from_memory(
-                    user,
-                    None,
-                    &std::fs::read_to_string(&key_path).ok().unwrap_or_default(),
-                    None,
-                ) {
-                    return Ok(builder);
-                }
-            }
-        }
-        // Cred::default() does not panic — it returns a credential that
-        // will ask the user interactively or delegate to an external helper.
-        Cred::default()
-    });
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stderr = stderr.trim();
+        return Err(anyhow!(
+            "git fetch failed: {}",
+            if stderr.is_empty() { "unknown error" } else { stderr }
+        ));
+    }
 
-    callbacks
+    Ok(())
 }
 
 /// Resolve whether the current invocation should skip TLS verification.
